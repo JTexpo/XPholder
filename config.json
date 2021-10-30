@@ -1,0 +1,36 @@
+{
+    "CLIENT_ID": "881210880887513139",
+    "TESTING_SERVER_ID": "902947334198026263",
+    "LOGING_CHANNEL_ID": "903474063790452737",
+    "COLOUR": "#bd85c9",
+    "ERROR_COLOUR": "#ff0f0f",
+    "TESTING_SERVER_URL": "https://discord.gg/gawCJ6EYcb",
+    "LEVELS": {
+        "1": 100,
+        "2": 200,
+        "3": 500,
+        "4": 1000,
+        "5": 1700,
+        "6": 2600,
+        "7": 3700,
+        "8": 5000,
+        "9": 6500,
+        "10": 8200,
+        "11": 10100,
+        "12": 12200,
+        "13": 14500,
+        "14": 17000,
+        "15": 19700,
+        "16": 22600,
+        "17": 25700,
+        "18": 29000,
+        "19": 32500,
+        "20": 36200
+    },
+    "LEVEL_UP_GIF":"https://images-ext-2.discordapp.net/external/hcwLLoGuKK--3NjB8W1vmHjMxJs8SkNKlMxEP-uigZk/https/c.tenor.com/pRKxzCD3UGcAAAAC/level-up.gif",
+    "TIERS":{
+        "5": "TIER_2",
+        "11": "TIER_3",
+        "17": "TIER_4"
+    }
+}
