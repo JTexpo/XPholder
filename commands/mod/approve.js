@@ -64,7 +64,8 @@ async execute(interaction) {
         .setImage(interaction.guild.bannerURL());
     
     // DMING THE PLAYER THAT THEY HAVE BEEN APPROVED
-    await player.send({ embeds : [embed] });
+    try{ await player.send({ embeds : [embed] }); }
+    catch(err){ console.log(err); }
 
     // CONFIRMATION MESSAGE
     await interaction.editReply({ content: `<@${player.id}> Has Been Successfully Notified!`, ephemeral: false });

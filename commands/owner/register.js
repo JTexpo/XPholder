@@ -6,12 +6,12 @@ data: new SlashCommandBuilder()
     .setName('register')
     .setDescription('Registers Server Into XPholder Database')
     .addRoleOption(option => option
-        .setName("mode_role")
+        .setName("mod_role")
         .setDescription("Role Of The Moderators Of The Server")
         .setRequired(true))
     .addIntegerOption(option => option
         .setName("character_count")
-        .setDescription("Must Be Between 1 and 10! The Amount Of Alternate Characters The Bot Will Support")
+        .setDescription("Must Be Between 1 and 3! The Amount Of Alternate Characters The Bot Will Support")
         .setRequired(true))
     .addChannelOption(option => option
         .setName("level_up_channel")
@@ -41,7 +41,7 @@ async execute(interaction) {
 
     // GRABBING ALL OPTIONS
     const charCount = interaction.options.getInteger("character_count");
-    const modRole = interaction.options.getRole("mode_role");
+    const modRole = interaction.options.getRole("mod_role");
     const approveLevel = interaction.options.getInteger("approve_level");
     const approveMessage = interaction.options.getString("approve_message");
     const levelUpChannel = interaction.options.getChannel("level_up_channel");

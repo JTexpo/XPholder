@@ -64,8 +64,11 @@ client.on('interactionCreate', async interaction => {
 
 client.on('messageCreate', async message => {
 try{
+    // NOT READING BOTS
+    if (message.author.bot){ return; }
+
     // CHECKING IF THE SERVER IS REGISTERED
-    try{ await fs.promises.access(`./server/${message.guildId}`); }catch{};
+    try{ await fs.promises.access(`./servers/${message.guildId}`); }catch{ return; };
     
     // DETERMINING IF A POST GIVES XP OR NOT, AND LETTING THE USER KNOW
     if ( (message.content.split(' ').length <= 10) && !message.content.startsWith('!')){ return; }
@@ -87,7 +90,7 @@ try{
 
     const postLevel = getPlayerLevel(serverInfo["xp"][playerId])["level"];
 
-    if (postLevel != preLevel){
+    if (postLevel != preLevel){try{
         const levelUpGuild = await client.guilds.fetch(message.guildId);
         const levelUpChannel = await levelUpGuild.channels.fetch(serverInfo["config"]["LEVEL_UP_CHANNEL"]);
 
@@ -95,7 +98,7 @@ try{
             .setTitle("Level Up!")
             .setDescription(`Congrats ${message.member.user} you are now **lv ${postLevel}**\n\n${serverInfo["config"]["LEVEL_UP_MESSAGE"]}`)
             .setImage(LEVEL_UP_GIF)
-            .setThumbnail(message.author.avatarURL())
+            .setThumbnail(message.member.displayAvatarURL())
             .setColor(COLOUR)
             .setFooter("Wanna Level Up Faster? XPholder Rewards Larger Posts With More XP!");
 
@@ -104,16 +107,16 @@ try{
                 content: `${message.member.user}`,
                 embeds: [levelUpMessage] 
             });
-        }
+        }} catch(err){ console.log(err); }
 
         if(postLevel in TIERS){
             let removeRoles = [];
             let addRoles = [];
-            for(const [roleName, roleId] of Object.entries(serverInfo["config"]["TIER_ROLES"])){
+            for(const [roleName, roleId] of Object.entries(serverInfo["config"]["TIER_ROLES"])){try {
                 let role = await message.guild.roles.fetch(roleId);
                 if (roleName == TIERS[postLevel]){ addRoles.push( role ); }
                 else{ removeRoles.push( role ); }
-            }
+            } catch(err){ console.log(err); }}
             const playerMember = await message.member.roles.remove( removeRoles );
             playerMember.roles.add(addRoles);
         }

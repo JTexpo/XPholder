@@ -67,23 +67,23 @@ async execute(interaction) {
         row = new MessageActionRow()
             .addComponents(
                 new MessageButton()
-                    .setCustomId('previous')
+                    .setCustomId('xp_previous')
                     .setLabel('<')
                     .setStyle('SECONDARY'),
                 new MessageButton()
-                    .setCustomId('next')
+                    .setCustomId('xp_next')
                     .setLabel('>')
                     .setStyle('SECONDARY'),
                 new MessageButton()
-                    .setCustomId('set')
+                    .setCustomId('xp_set')
                     .setLabel('Set')
                     .setStyle("SUCCESS"),
                 new MessageButton()
-                    .setCustomId("freeze")
+                    .setCustomId("xp_freeze")
                     .setLabel("Toggle Freeze")
                     .setStyle("PRIMARY"),
                 new MessageButton()
-                    .setCustomId("retire")
+                    .setCustomId("xp_retire")
                     .setLabel("Retire")
                     .setStyle("DANGER")
                     );
@@ -91,11 +91,11 @@ async execute(interaction) {
         row = new MessageActionRow()
             .addComponents(
                 new MessageButton()
-                    .setCustomId('previous')
+                    .setCustomId('xp_previous')
                     .setLabel('<')
                     .setStyle('SECONDARY'),
                 new MessageButton()
-                    .setCustomId('next')
+                    .setCustomId('xp_next')
                     .setLabel('>')
                     .setStyle('SECONDARY')
                     );
@@ -153,7 +153,7 @@ async function createButtonEvents(interaction, replyMessage, player,  characterE
     let index = 0;
     // READING COMMANDS THAT ARE ONLY OF BUTTON INTERACTION AND APART OF THE MESSAGE
     const filter = btnInteraction => (
-        ['previous','next','set','freeze','retire'].includes(btnInteraction.customId) &&
+        ['xp_previous','xp_next','xp_set','xp_freeze','xp_retire'].includes(btnInteraction.customId) &&
         replyMessage.id == btnInteraction.message.id
     );
     // SETTING THE COLLECTOR TO A 1 MINUET WINDOW
@@ -165,17 +165,17 @@ async function createButtonEvents(interaction, replyMessage, player,  characterE
     collector.on('collect', async btnInteraction => {
         switch (btnInteraction.customId){
             // IF PREVIOUS DECREMENT THE COUNTER UNLESS THE INDEX IS OUT OF VIEW
-            case "previous":
+            case "xp_previous":
                 index -= 1;
                 if (index < 0){ index = 0; }
                 break;
             // IF NEX INCREMENT THE COUNTER UNLESS THE INDEX IS OUT OF VIEW
-            case "next":
+            case "xp_next":
                 index += 1;
                 if (index >= characterEmbeds.length){ index = characterEmbeds.length - 1;}      
                 break;
             // IF SET, MODIFY THE PLAYERS ROLES TO THE ACTIVE CHARACTER SELECTED
-            case "set":
+            case "xp_set":
                 // CREATING A LIST OF ROLES TO ADD OR REMOVE
                 let addRoles = [];
                 let removeRoles = [];
@@ -183,7 +183,8 @@ async function createButtonEvents(interaction, replyMessage, player,  characterE
                 // GRABBING ALL OF THE ROLES FOR THE CHARACTER AND PLACING THEM IN EITHER ADD OR REMOVE
                 for(let charIndex = 0; charIndex < characterList.length; charIndex++){
                     const role = await player.guild.roles.fetch(characterList[charIndex]["role"]);
-                    if (charIndex == index){ addRoles.push(role); }
+                    if (!role){ continue; }
+                    else if (charIndex == index){ addRoles.push(role); }
                     else{ removeRoles.push(role); }
                 }
 
@@ -198,7 +199,8 @@ async function createButtonEvents(interaction, replyMessage, player,  characterE
                 // GRABBING ALL OF THE ROLES FOR THE CHARACTER AND PLACING THEM IN EITHER ADD OR REMOVE
                 for ( const [tierName, id] of Object.entries(serverInfo["config"]["TIER_ROLES"]) ){
                     const role = await player.guild.roles.fetch(id);
-                    if (tierName == tier){ addRoles.push(role); }
+                    if (!role){ continue; }
+                    else if (tierName == tier){ addRoles.push(role); }
                     else{ removeRoles.push(role); }
                 }
 
@@ -207,14 +209,15 @@ async function createButtonEvents(interaction, replyMessage, player,  characterE
                 playerMember.roles.add(addRoles);                
                 break;
             // IF FREEZE, TOGGLE THE FREEZE (REMOVE IF HAVE, GAIN IF NOT)
-            case "freeze":
+            case "xp_freeze":
                 const freezeRole = await player.guild.roles.fetch(serverInfo["config"]["XP_FREEZE_ROLE"]);
+                if (!freezeRole){ break; }
                 if (player._roles.includes(serverInfo["config"]["XP_FREEZE_ROLE"])){
                     player.roles.remove(freezeRole);
                 }else{ player.roles.add(freezeRole); }
                 break;
             // IF RETIRE SET CHARACTER XP TO 0 AND REMOVE TIER ROLES
-            case "retire":
+            case "xp_retire":
                 // LOADING THE JSON AND SETTING THE CURRECT SELECTED CHARACTER'S XP TO 0
                 let xpJSON = await fs.promises.readFile(`./servers/${interaction.guildId}/xp.json`,'utf-8');
                 let xpObj = JSON.parse(xpJSON);
@@ -231,6 +234,7 @@ async function createButtonEvents(interaction, replyMessage, player,  characterE
                 let removeTiers = [];
                 for (const [role, id] of Object.entries(serverInfo["config"]["TIER_ROLES"])){
                     const role = await player.guild.roles.fetch(id);
+                    if (!role){ continue; }
                     removeTiers.push(role);
                 } player.roles.remove(removeTiers);
                 return;

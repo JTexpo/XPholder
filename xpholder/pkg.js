@@ -1,4 +1,4 @@
-const { TESTING_SERVER_ID, LOGING_CHANNEL_ID, COLOUR, ERROR_COLOUR, LEVELS } = require("../config.json");
+const { TESTING_SERVER_ID, LOGING_CHANNEL_ID, ERROR_CHANNEL_ID, COLOUR, ERROR_COLOUR, LEVELS } = require("../config.json");
 const { MessageEmbed } = require('discord.js');
 const fs = require('fs');
 
@@ -9,6 +9,7 @@ async function logCommand(interaction){
         .setTitle("Command Was Used")
         .addFields(
             {inline: false, name: "Guild", value: `${interaction.guild.name}`},
+            {inline: false, name: "Guild Id", value: `${interaction.guild.id}`},
             {inline: false, name: "Author", value: `${interaction.user.username}`},
             {inline: false, name: "Command", value: `${interaction.commandName}`},
             )
@@ -41,6 +42,7 @@ async function logError(interaction, error){
         .setDescription(`${error}`)
         .addFields(
             {inline: false, name: "Guild", value: `${interaction.guild.name}`},
+            {inline: false, name: "Guild Id", value: `${interaction.guild.id}`},
             {inline: false, name: "Author", value: `${interaction.user.username}`},
             {inline: false, name: "Command", value: `${interaction.commandName}`},
             )
@@ -58,7 +60,7 @@ async function logError(interaction, error){
 
     // FETCHING THE TESTING SERVER AND LOG CHANNEL
     const testingServer = await interaction.client.guilds.fetch(TESTING_SERVER_ID);
-    const loggingChannel = await testingServer.channels.fetch(LOGING_CHANNEL_ID);
+    const loggingChannel = await testingServer.channels.fetch(ERROR_CHANNEL_ID);
 
     // REPORTING THE ERROR
     loggingChannel.send({
@@ -123,7 +125,7 @@ function awardXP(message, serverInfo, playerId){
     // HELPFUL INITS
     let channel = message.channel
     let roleBoost = 1;
-    const wordMod = Math.floor( (message.content.split(' ').length) / 100 );
+    const wordMod = message.content.split(' ').length / 100;
 
     // DETERMINING HOW MUCH THE USER GETS PER POST
     for (const role_id of message.member._roles){
@@ -135,7 +137,7 @@ function awardXP(message, serverInfo, playerId){
     // LOOKING AT THE CHANNEL, AND IF THE CHANNEL IS NOT IN THE DATABASE THAN TO LOOK AT THE CATEGORY (THREADS WILL LOOK IN THREAD, THAN CHANNEL, THAN CATEGORY)
     while (channel){
         if ( channel.id in serverInfo["channels"] ){
-            serverInfo["xp"][playerId] += ( serverInfo["channels"][channel.id] + wordMod ) * ( 1 + wordMod ) * roleBoost;
+            serverInfo["xp"][playerId] += Math.floor( ( serverInfo["channels"][channel.id] + wordMod ) * ( 1 + wordMod ) * roleBoost );
             break;
         }channel = message.guild.channels.cache.get(channel.parentId);
     }
