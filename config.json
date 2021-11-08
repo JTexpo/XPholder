@@ -33,5 +33,7 @@
         "5": "TIER_2",
         "11": "TIER_3",
         "17": "TIER_4"
-    }
+    },
+    "DEV_SERVER_URL":"https://discord.gg/gawCJ6EYcb",
+    "XPHOLDER_ICON_URL":"https://images-ext-1.discordapp.net/external/RXN_3nPLzSSiTV0tywbm31slaiqk1odRmUfi6kxBNsc/https/cdn.discordapp.com/avatars/881210880887513139/d1b7cfd5bfb2229d5e8afe1f4c83fa53.webp"
 }

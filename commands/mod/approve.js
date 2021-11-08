@@ -1,7 +1,7 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const fs = require('fs');
 const { MessageEmbed } = require('discord.js');
-const { LEVELS } = require('../../config.json');
+const { LEVELS, COLOUR } = require('../../config.json');
 
 module.exports = {
 data: new SlashCommandBuilder()
@@ -61,7 +61,8 @@ async execute(interaction) {
     const embed = new MessageEmbed()
         .setTitle(`Welcome To ${interaction.guild.name}`)
         .setDescription(`${serverConfigObj["APPROVE_MESSAGE"]}`)
-        .setImage(interaction.guild.bannerURL());
+        .setImage(interaction.guild.bannerURL())
+        .setColor(COLOUR);
     
     // DMING THE PLAYER THAT THEY HAVE BEEN APPROVED
     try{ await player.send({ embeds : [embed] }); }

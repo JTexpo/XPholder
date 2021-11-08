@@ -11,6 +11,7 @@ async function logCommand(interaction){
             {inline: false, name: "Guild", value: `${interaction.guild.name}`},
             {inline: false, name: "Guild Id", value: `${interaction.guild.id}`},
             {inline: false, name: "Author", value: `${interaction.user.username}`},
+            {inline: false, name: "Author Id", value: `${interaction.user.id}`},
             {inline: false, name: "Command", value: `${interaction.commandName}`},
             )
         .setTimestamp()
@@ -44,6 +45,7 @@ async function logError(interaction, error){
             {inline: false, name: "Guild", value: `${interaction.guild.name}`},
             {inline: false, name: "Guild Id", value: `${interaction.guild.id}`},
             {inline: false, name: "Author", value: `${interaction.user.username}`},
+            {inline: false, name: "Author Id", value: `${interaction.user.id}`},
             {inline: false, name: "Command", value: `${interaction.commandName}`},
             )
         .setTimestamp()
@@ -137,6 +139,7 @@ function awardXP(message, serverInfo, playerId){
     // LOOKING AT THE CHANNEL, AND IF THE CHANNEL IS NOT IN THE DATABASE THAN TO LOOK AT THE CATEGORY (THREADS WILL LOOK IN THREAD, THAN CHANNEL, THAN CATEGORY)
     while (channel){
         if ( channel.id in serverInfo["channels"] ){
+            if (serverInfo["channels"][channel.id] == 0){ break; }
             serverInfo["xp"][playerId] += Math.floor( ( serverInfo["channels"][channel.id] + wordMod ) * ( 1 + wordMod ) * roleBoost );
             break;
         }channel = message.guild.channels.cache.get(channel.parentId);

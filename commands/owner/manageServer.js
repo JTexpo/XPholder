@@ -45,6 +45,10 @@ data: new SlashCommandBuilder()
         .setName("approve_message")
         .setDescription("The New Message That The Approve Command Will Send")
         .setRequired(false))
+    .addIntegerOption(option => option
+            .setName("character_count")
+            .setDescription("The New Max Characters Per One Player")
+            .setRequired(false))
         ,
 async execute(interaction) {
     // RESTRICTING THE COMMAND TO ONLY THE OWNER FOR OBVIOUS REASONS
@@ -59,11 +63,15 @@ async execute(interaction) {
     let serverConfigObj;
     let rolesJSON;
     let rolesObj;
+    let xpJSON;
+    let xpObj;
     try{ 
         serverConfigJSON = await fs.promises.readFile(`./servers/${interaction.guildId}/config.json`,"utf-8");
         serverConfigObj = JSON.parse(serverConfigJSON);  
         rolesJSON = await fs.promises.readFile(`./servers/${interaction.guildId}/roles.json`,"utf-8");
         rolesObj = JSON.parse(rolesJSON);  
+        xpJSON = await fs.promises.readFile(`./servers/${interaction.guildId}/xp.json`,"utf-8");
+        xpObj = JSON.parse(xpJSON);  
     }catch{
         await interaction.editReply({ 
             content: "Looks Like This Server Isn't Registered. Please Do `/register` first!",
@@ -81,8 +89,41 @@ async execute(interaction) {
     const approveMessage = interaction.options.getString("approve_message");
     const levelUpChannel = interaction.options.getChannel("level_up_channel");
     const levelUpMessage = interaction.options.getString("level_up_message");
+    const charCount = interaction.options.getInteger("character_count");
+
 
     // IF THE INPUT EXISTS TO POPULATE THE SERVER CONFIG WITH IT
+    if (charCount){
+        if (charCount > 3 || charCount < 1){
+            await interaction.editReply({ 
+                content: '[ERROR : INVALID NUMBER] Please Chose A Number Between 1 And 3 For The `character_count`',
+                ephemeral: true,
+            }); return;
+        }
+        // CREATING NEW CHARACTER ROLES
+        let characterRoles = {};
+        for(let index = 1; index <= charCount; index++){
+            const role = await interaction.guild.roles.create({ name: `Character ${index}` });
+            characterRoles[`CHARACTER_${index}`] = role.id;
+        }
+
+        let newXpObj = {};
+        for (let [playerId, xp] of Object.entries(xpObj)){
+            const playerInfo = playerId.split("-");
+            for (const [roleName, roleId] of Object.entries(serverConfigObj["CHARACTER_ROLES"])){
+                if (roleId == playerInfo[1]){
+                    newXpObj[`${playerInfo[0]}-${characterRoles[roleName]}`] = xp;
+                }
+            }
+        }
+        // TURNING OBJECT BACK INTO JSON
+        xpJSON = JSON.stringify(newXpObj);
+        // WRITING INFORMATION TO THE XP JSON FILE
+        fs.writeFile(`./servers/${interaction.guildId}/xp.json`,xpJSON, err =>{
+            if (err) {console.log(err); return}}
+        );
+        serverConfigObj["CHARACTER_ROLES"] = characterRoles
+    }
     if (modRole){ serverConfigObj["MOD_ROLE"] = modRole.id; }
     if (tier1){ serverConfigObj["TIER_ROLES"]["TIER_1"] = tier1.id; }
     if (tier2){ serverConfigObj["TIER_ROLES"]["TIER_2"] = tier2.id; }
@@ -95,20 +136,23 @@ async execute(interaction) {
     if (xpFreeze){ 
         serverConfigObj["XP_FREEZE_ROLE"] = xpFreeze.id; 
         rolesObj[xpFreeze.id] = 0;
+        // TURNING OBJECT BACK INTO JSON
+        rolesJSON = JSON.stringify(rolesObj);
+        // WRITING INFORMATION TO THE ROLES JSON FILE
+        fs.writeFile(`./servers/${interaction.guildId}/roles.json`,rolesJSON, err =>{
+            if (err) {console.log(err); return}}
+        );
     }
 
-    // TURNING OBJECTS BACK INTO JSON
+    // TURNING OBJECT BACK INTO JSON
     serverConfigJSON = JSON.stringify(serverConfigObj);
-    rolesJSON = JSON.stringify(rolesObj);
-
-    // WRITING INFORMATION TO THE APPROPERATE JSON FILE
+    
+    // WRITING INFORMATION TO THE CONFIF JSON FILE
     fs.writeFile(`./servers/${interaction.guildId}/config.json`,serverConfigJSON, err =>{
         if (err) {console.log(err); return}}
     );
 
-    fs.writeFile(`./servers/${interaction.guildId}/roles.json`,rolesJSON, err =>{
-        if (err) {console.log(err); return}}
-    );
+    
     
     await interaction.editReply('SUCCESS!');
 }};
