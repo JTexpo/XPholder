@@ -6,7 +6,7 @@ const { getPlayerLevel } = require('../../xpholder/pkg.js')
 module.exports = {
 data: new SlashCommandBuilder()
     .setName('manage_player')
-    .setDescription('Edit Database Information On The Player')
+    .setDescription('[Mods Only] Edit Database Information On The Player')
     .addUserOption(option => option
         .setName("player")
         .setDescription("The Player Wish To Edit")
@@ -19,6 +19,10 @@ data: new SlashCommandBuilder()
         .setName("set_level")
         .setDescription("The Level To Set The Player To")
         .setRequired(false))
+    .addIntegerOption(option => option
+            .setName("set_xp")
+            .setDescription("The Amount Of XP To Set The Player To")
+            .setRequired(false))
     .addIntegerOption(option => option
         .setName("give_xp")
         .setDescription("The Amount Of XP To Give The Player (Can Be Negative)")
@@ -54,6 +58,7 @@ async execute(interaction) {
     const character = interaction.options.getInteger("character");
     const player = interaction.options.getUser("player");
     const playerLevel = interaction.options.getInteger("set_level");
+    const playerXP = interaction.options.getInteger("set_xp");
     const awardXP = interaction.options.getInteger("give_xp");
     const playerCP = interaction.options.getInteger("set_cp");
     const awardCP = interaction.options.getInteger("give_cp");
@@ -67,14 +72,14 @@ async execute(interaction) {
     }); return;}
 
     // CHECKING TO MAKE SURE THAT WE HAVE ONLY ONE OF THE FOUR OPTIONS
-    if ( ( (playerLevel? 1:0) + (awardXP? 1:0) + (playerCP? 1:0) + (awardCP? 1:0) ) > 1){
+    if ( ( (playerLevel? 1:0) + (awardXP? 1:0) + (playerCP? 1:0) + (awardCP? 1:0) + (playerXP? 1:0) ) > 1){
         await interaction.editReply({ 
-            content: "You Provided Too Many Options, Please Only Chose One From : `set_level` `give_xp` `set_cp` `give_xp`",
+            content: "You Provided Too Many Options, Please Only Chose One From : `set_level` `set_xp` `give_xp` `set_cp` `give_xp`",
             ephemeral: true
         }); return;
-    }else if ( ( (playerLevel? 1:0) + (awardXP? 1:0) + (playerCP? 1:0) + (awardCP? 1:0) ) == 0){
+    }else if ( ( (playerLevel? 1:0) + (awardXP? 1:0) + (playerCP? 1:0) + (awardCP? 1:0) + (playerXP? 1:0) ) == 0){
         await interaction.editReply({ 
-            content: "You Did Not Provide An Option, Please Only Chose One From : `set_level` `give_xp` `set_cp` `give_xp`",
+            content: "You Did Not Provide An Option, Please Only Chose One From : `set_level` `set_xp` `give_xp` `set_cp` `give_xp`",
             ephemeral: true
         }); return;
     }
@@ -92,10 +97,13 @@ async execute(interaction) {
                 ephemeral: true,
         }); return;}
         for (let lvl = 1; lvl < playerLevel; lvl++){ newXP += LEVELS[`${lvl}`]; }
-    }else if(awardXP){
-        newXP = serverXpObj[`${player.id}-${charId}`] + awardXP;
-    }else if(playerCP){
-        for( let CP = playerCP; CP > 0; CP-- ){ newXP += getLevelCP(newXP); }
+    // SETTING THE PLAYERS XP TO THE INPUT XP
+    }else if(playerXP){ newXP = playerXP;
+    // ADDING THE NEW XP TO THE EXISTING XP
+    }else if(awardXP){ newXP = serverXpObj[`${player.id}-${charId}`] + awardXP;
+    // FOR LOOP TO BUILD THE NEW CP
+    }else if(playerCP){ for( let CP = playerCP; CP > 0; CP-- ){ newXP += getLevelCP(newXP); }
+    // GRABBING THE PLAYERS LEVEL AND THEN USING THE SAME FOR LOOP FOR SETTING THE CP
     }else if(awardCP){
         newXP = serverXpObj[`${player.id}-${charId}`];
         for( let CP = awardCP; CP > 0; CP-- ){ newXP += getLevelCP(newXP); }  

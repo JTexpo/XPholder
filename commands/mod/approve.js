@@ -6,7 +6,7 @@ const { LEVELS, COLOUR } = require('../../config.json');
 module.exports = {
 data: new SlashCommandBuilder()
     .setName('approve')
-    .setDescription('Approves A Player To The Server')
+    .setDescription('[Mods Only] Approves A Player To The Server')
     .addUserOption(option => option
         .setName("player")
         .setDescription("The Player To Be Approved")
@@ -46,6 +46,14 @@ async execute(interaction) {
             ephemeral: true,
     }); return;}
 
+    let serverCharactersJSON = await fs.promises.readFile(`./servers/${interaction.guildId}/characters.json`,"utf-8");
+    let serverCharactersObj = JSON.parse(serverCharactersJSON);
+    if (`${player.id}-${charId}` in serverCharactersObj){
+        await interaction.editReply({ 
+            content: `Sorry But That Character Is In Use. Please Ask ${player} To Retire, Or Pick A Different Character Slot`,
+            ephemeral: true,
+    }); return;}
+
     // SETTING THE STARTING XP OF THE PLAYER
     let startingXP = 0;
     for (let lvl = 1; lvl < serverConfigObj["APPROVE_LEVEL"]; lvl++){ startingXP += LEVELS[`${lvl}`]; }
@@ -61,13 +69,18 @@ async execute(interaction) {
     const embed = new MessageEmbed()
         .setTitle(`Welcome To ${interaction.guild.name}`)
         .setDescription(`${serverConfigObj["APPROVE_MESSAGE"]}`)
-        .setImage(interaction.guild.bannerURL())
+        .setImage(interaction.guild.bannerURL({size: 1024}))
         .setColor(COLOUR);
     
     // DMING THE PLAYER THAT THEY HAVE BEEN APPROVED
-    try{ await player.send({ embeds : [embed] }); }
-    catch(err){ console.log(err); }
+    try{ 
+        await player.send({ embeds : [embed] }); 
+        await interaction.editReply({ content: `<@${player.id}> Has Been Successfully Notified!`, ephemeral: false });
+    }
+    catch(err){ 
+        await interaction.editReply({ content: `<@${player.id}> Approved, But Was Unable To Be Notified!`, ephemeral: false });
+        console.log(err); 
+    }
 
     // CONFIRMATION MESSAGE
-    await interaction.editReply({ content: `<@${player.id}> Has Been Successfully Notified!`, ephemeral: false });
 }}

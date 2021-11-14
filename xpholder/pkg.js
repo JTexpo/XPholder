@@ -133,7 +133,7 @@ function awardXP(message, serverInfo, playerId){
     for (const role_id of message.member._roles){
         if ( !(role_id in serverInfo["roles"]) ){ continue; }
         else if (serverInfo["roles"][role_id] > roleBoost){ roleBoost = serverInfo["roles"][role_id];}
-        else if (serverInfo["roles"][role_id] == 0){ roleBoost = 0; }
+        else if (serverInfo["roles"][role_id] == 0){ roleBoost = 0; break; }
     }
 
     // LOOKING AT THE CHANNEL, AND IF THE CHANNEL IS NOT IN THE DATABASE THAN TO LOOK AT THE CATEGORY (THREADS WILL LOOK IN THREAD, THAN CHANNEL, THAN CATEGORY)

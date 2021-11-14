@@ -93,12 +93,16 @@ try{
     if (postLevel != preLevel){try{
         const levelUpGuild = await client.guilds.fetch(message.guildId);
         const levelUpChannel = await levelUpGuild.channels.fetch(serverInfo["config"]["LEVEL_UP_CHANNEL"]);
-
+        const charactersJson = await fs.promises.readFile(`./servers/${message.guildId}/characters.json`,"utf-8");
+        const charactersObj = JSON.parse(charactersJson);
+        const charId = `${message.author.id}-${characterRole}`;
+        const characterName = charactersObj[charId] ? charactersObj[charId]['name'] : `${message.member.user}`
+        const characterImg = charactersObj[charId] ? charactersObj[charId]['img'] : `${message.member.displayAvatarURL()}`
         const levelUpMessage = new MessageEmbed()
             .setTitle("Level Up!")
-            .setDescription(`Congrats ${message.member.user} you are now **lv ${postLevel}**\n\n${serverInfo["config"]["LEVEL_UP_MESSAGE"]}`)
+            .setDescription(`Congrats ${characterName} you are now **lv ${postLevel}**\n\n${serverInfo["config"]["LEVEL_UP_MESSAGE"]}`)
             .setImage(LEVEL_UP_GIF)
-            .setThumbnail(message.member.displayAvatarURL())
+            .setThumbnail(characterImg)
             .setColor(COLOUR)
             .setFooter("Wanna Level Up Faster? XPholder Rewards Larger Posts With More XP!");
 

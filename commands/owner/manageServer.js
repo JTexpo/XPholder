@@ -4,7 +4,7 @@ const fs = require('fs');
 module.exports = {
 data: new SlashCommandBuilder()
     .setName('manage_server')
-    .setDescription('Edit The Info You Registered The Server With')
+    .setDescription('[Owner Only] Edit The Info You Registered The Server With')
     .addRoleOption(option => option
         .setName("mod_role")
         .setDescription("Role Of The Moderators Of The Server")
@@ -65,6 +65,8 @@ async execute(interaction) {
     let rolesObj;
     let xpJSON;
     let xpObj;
+    let charactersJSON;
+    let charactersObj;
     try{ 
         serverConfigJSON = await fs.promises.readFile(`./servers/${interaction.guildId}/config.json`,"utf-8");
         serverConfigObj = JSON.parse(serverConfigJSON);  
@@ -72,6 +74,8 @@ async execute(interaction) {
         rolesObj = JSON.parse(rolesJSON);  
         xpJSON = await fs.promises.readFile(`./servers/${interaction.guildId}/xp.json`,"utf-8");
         xpObj = JSON.parse(xpJSON);  
+        charactersJSON = await fs.promises.readFile(`./servers/${interaction.guildId}/characters.json`,"utf-8");
+        charactersObj = JSON.parse(charactersJSON);
     }catch{
         await interaction.editReply({ 
             content: "Looks Like This Server Isn't Registered. Please Do `/register` first!",
@@ -116,10 +120,25 @@ async execute(interaction) {
                 }
             }
         }
+
+        let newCharactersObj = {};
+        for (let [playerId, characterInfo] of Object.entries(charactersObj)){
+            const playerInfo = playerId.split("-");
+            for (const [roleName, roleId] of Object.entries(serverConfigObj["CHARACTER_ROLES"])){
+                if (roleId == playerInfo[1]){
+                    newCharactersObj[`${playerInfo[0]}-${characterRoles[roleName]}`] = characterInfo;
+                }
+            }
+        }
+
         // TURNING OBJECT BACK INTO JSON
         xpJSON = JSON.stringify(newXpObj);
+        charactersJSON = JSON.stringify(newCharactersObj);
         // WRITING INFORMATION TO THE XP JSON FILE
         fs.writeFile(`./servers/${interaction.guildId}/xp.json`,xpJSON, err =>{
+            if (err) {console.log(err); return}}
+        );
+        fs.writeFile(`./servers/${interaction.guildId}/characters.json`,charactersJSON, err =>{
             if (err) {console.log(err); return}}
         );
         serverConfigObj["CHARACTER_ROLES"] = characterRoles

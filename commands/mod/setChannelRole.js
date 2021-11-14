@@ -4,7 +4,7 @@ const fs = require('fs');
 module.exports = {
 data: new SlashCommandBuilder()
     .setName('set_game_xp')
-    .setDescription('Numbers 0+ Will Add To Database, All Negatives Will Delete Entity')
+    .setDescription('[Mods Only] Numbers 0+ Will Add To Database, All Negatives Will Delete Entity')
     .addIntegerOption(option => option
         .setName("amount")
         .setDescription("Amount Of XP Per Post OR Modifier For Role")

@@ -6,7 +6,7 @@ const { COLOUR, XPHOLDER_ICON_URL, DEV_SERVER_URL } = require('../../config.json
 module.exports = {
 data: new SlashCommandBuilder()
     .setName('register')
-    .setDescription('Registers Server Into XPholder Database')
+    .setDescription('[Owner Only] Registers Server Into XPholder Database')
     .addRoleOption(option => option
         .setName("mod_role")
         .setDescription("Role Of The Moderators Of The Server")
@@ -67,7 +67,7 @@ async execute(interaction) {
 
     // CREATING A FOLDER AND FILE FOR THE NEW GUILD
     fs.mkdirSync(`./servers/${interaction.guildId}/`, { recursive: true })
-    const esentialFiles = ["xp","channels","config"]
+    const esentialFiles = ["xp","channels","characters"]
     for (const file of esentialFiles ){
         fs.writeFile(`./servers/${interaction.guildId}/${file}.json`,'{}', err =>{
             if (err) {console.log(err); return}}
@@ -146,7 +146,7 @@ level 19 -> 20    : 50000
 **XP :** If you are a play by post (PBP) server, or wish to reward xp per post, please use the \`/set_game_xp\` to set channels a base amount of xp to award per post. The formula for xp is the following :
 **(channel_xp + words / 100 ) * (1 + words / 100) * role**
 
-**CP :** If you are an adventure league (AL) server, or wish to award CP, please use the \`/manage_player\` command to reward and set CP. CP will be converted into XP that way even play by post servers can use this awesome check point system of progression!
+**CP :** If you are an adventure league (AL) server, or wish to award check points (CP), please use the \`/manage_player\` command to reward and set CP. CP will be converted into XP that way even play by post servers can use this awesome check point system of progression!
 `)
         .setColor(COLOUR)
         .setThumbnail(XPHOLDER_ICON_URL)

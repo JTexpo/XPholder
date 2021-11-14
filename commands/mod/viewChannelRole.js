@@ -6,7 +6,7 @@ const { COLOUR } = require('../../config.json');
 module.exports = {
 data: new SlashCommandBuilder()
     .setName('view_game_xp')
-    .setDescription('Brief Over View Of XP Rules Set Up'),
+    .setDescription('[Mods Only] Brief Over View Of XP Rules Set Up'),
 async execute(interaction) {
     // RESTRICTING THE COMMAND FOR ONLY THOSE WHO ARE THE MODS OF THE SERVER
     try{ 
