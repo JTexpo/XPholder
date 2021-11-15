@@ -255,9 +255,14 @@ async function createButtonEvents(interaction, replyMessage, player,  characterE
                 return;
         }
         // ALWAYS UPDATING THE INTERACCTION THAT WAY DISCORD DOESN'T THIINK THAT THE COMMAND FAILED
+        try{
         await btnInteraction.update({
             embeds:[ characterEmbeds[index] ]
-        });
+        });} catch(err){
+            console.log(err);
+            await btnInteraction.update({
+                embeds:[], components: [], content: `[ERROR] ${err}`
+        }); return;}
     });
 }
 

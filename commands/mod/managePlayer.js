@@ -1,7 +1,9 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const fs = require('fs');
-const { LEVELS } = require('../../config.json');
+const { LEVELS, COLOUR, XPHOLDER_ICON_URL } = require('../../config.json');
 const { getPlayerLevel } = require('../../xpholder/pkg.js')
+const { MessageEmbed } = require('discord.js');
+
 
 module.exports = {
 data: new SlashCommandBuilder()
@@ -35,6 +37,10 @@ data: new SlashCommandBuilder()
         .setName("give_cp")
         .setDescription("The Adventure League CP To Give The Player")
         .setRequired(false))
+    .addStringOption(option => option
+        .setName("memo")
+        .setDescription("A Small Note On Why The Reward")
+        .setRequired(false))
     ,
 async execute(interaction) {
     // RESTRICTING THE COMMAND FOR ONLY THOSE WHO ARE THE MODS OF THE SERVER
@@ -62,6 +68,10 @@ async execute(interaction) {
     const awardXP = interaction.options.getInteger("give_xp");
     const playerCP = interaction.options.getInteger("set_cp");
     const awardCP = interaction.options.getInteger("give_cp");
+    const memo = interaction.options.getString("memo");
+
+    let embedDescription;
+    let embedTitle;
 
     // DETERMINING IF A VALID CHARACTER WAS SELECTED AND NOTIFYING THE USER IF NOT
     const charId = serverConfigObj["CHARACTER_ROLES"][`CHARACTER_${character}`];
@@ -96,15 +106,28 @@ async execute(interaction) {
                 content: 'Please Chose A Number Between 1 And 20 For The `set_level`',
                 ephemeral: true,
         }); return;}
+        embedTitle = "Level Set!"
+        embedDescription = `${interaction.user} Is Setting ${player}'s Level To **${playerLevel}**`;
         for (let lvl = 1; lvl < playerLevel; lvl++){ newXP += LEVELS[`${lvl}`]; }
     // SETTING THE PLAYERS XP TO THE INPUT XP
-    }else if(playerXP){ newXP = playerXP;
+    }else if(playerXP){ 
+        embedTitle = "XP Set!"
+        embedDescription = `${interaction.user} Is Setting ${player}'s XP To **${playerXP}**`;
+        newXP = playerXP;
     // ADDING THE NEW XP TO THE EXISTING XP
-    }else if(awardXP){ newXP = serverXpObj[`${player.id}-${charId}`] + awardXP;
+    }else if(awardXP){ 
+        embedTitle = "XP Rewarded!"
+        embedDescription = `${interaction.user} Is Awarding ${player} **${awardXP} XP**`;
+        newXP = serverXpObj[`${player.id}-${charId}`] + awardXP;
     // FOR LOOP TO BUILD THE NEW CP
-    }else if(playerCP){ for( let CP = playerCP; CP > 0; CP-- ){ newXP += getLevelCP(newXP); }
+    }else if(playerCP){ 
+        embedTitle = "CP Set!"
+        embedDescription = `${interaction.user} Is Setting ${player}'s CP To **${playerCP}**`;
+        for( let CP = playerCP; CP > 0; CP-- ){ newXP += getLevelCP(newXP); }
     // GRABBING THE PLAYERS LEVEL AND THEN USING THE SAME FOR LOOP FOR SETTING THE CP
     }else if(awardCP){
+        embedTitle = "CP Rewarded!"
+        embedDescription = `${interaction.user} Is Awarding ${player} **${awardCP} CP**`;
         newXP = serverXpObj[`${player.id}-${charId}`];
         for( let CP = awardCP; CP > 0; CP-- ){ newXP += getLevelCP(newXP); }  
     }
@@ -117,6 +140,21 @@ async execute(interaction) {
 
     // RETURNING A MESSAGE OF CONFIRMATION
     await interaction.editReply(`<@${player.id}> Character ${character} XP is now ${serverXpObj[`${player.id}-${charId}`]}`);
+
+    try{
+    const levelUpChannel = await interaction.guild.channels.fetch(serverConfigObj["LEVEL_UP_CHANNEL"]);
+    let levelUpMessage = new MessageEmbed()
+            .setTitle(embedTitle)
+            .setDescription(`${embedDescription}`)
+            .setThumbnail(XPHOLDER_ICON_URL)
+            .setColor(COLOUR);
+    if (memo){ levelUpMessage.addField("memo",memo,false); }
+    if (levelUpChannel.isText()){
+        levelUpChannel.send({ 
+            content: `${player}`,
+            embeds: [levelUpMessage] 
+        });
+    }} catch(err){ console.log(err); }
 }}
 
 function getLevelCP(playerXP){
