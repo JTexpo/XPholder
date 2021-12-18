@@ -170,22 +170,27 @@ async function createButtonEvents(interaction, replyMessage, player,  characterE
     const collectorChannel = interaction.channel;
     if (!collectorChannel){ return; }
     const collector = collectorChannel.createMessageComponentCollector({ filter, time: 60000 });
-
+    
+    let retire = false;
     // WHEN RECIEVING THE MESSAGE
     collector.on('collect', async btnInteraction => {
+        try{
         switch (btnInteraction.customId){
             // IF PREVIOUS DECREMENT THE COUNTER UNLESS THE INDEX IS OUT OF VIEW
             case "xp_previous":
+                retire = false;
                 index -= 1;
                 if (index < 0){ index = 0; }
                 break;
             // IF NEX INCREMENT THE COUNTER UNLESS THE INDEX IS OUT OF VIEW
             case "xp_next":
+                retire = false;
                 index += 1;
                 if (index >= characterEmbeds.length){ index = characterEmbeds.length - 1;}      
                 break;
             // IF SET, MODIFY THE PLAYERS ROLES TO THE ACTIVE CHARACTER SELECTED
             case "xp_set":
+                retire = false;
                 // CREATING A LIST OF ROLES TO ADD OR REMOVE
                 let addRoles = [];
                 let removeRoles = [];
@@ -220,6 +225,7 @@ async function createButtonEvents(interaction, replyMessage, player,  characterE
                 break;
             // IF FREEZE, TOGGLE THE FREEZE (REMOVE IF HAVE, GAIN IF NOT)
             case "xp_freeze":
+                retire = false;
                 const freezeRole = await player.guild.roles.fetch(serverConfigObj["XP_FREEZE_ROLE"]);
                 if (!freezeRole){ break; }
                 if (player._roles.includes(serverConfigObj["XP_FREEZE_ROLE"])){
@@ -228,6 +234,19 @@ async function createButtonEvents(interaction, replyMessage, player,  characterE
                 break;
             // IF RETIRE SET CHARACTER XP TO 0 AND REMOVE TIER ROLES
             case "xp_retire":
+                if (!retire){
+                try{
+                    await btnInteraction.update({
+                        embeds:[],
+                        content: "**__Are you sure you want to retire?__**\n\nClick the button a second time to confirm, else click something else."
+                    });} catch(err){
+                        console.log(err);
+                        await btnInteraction.update({
+                            embeds:[], components: [], content: `[ERROR] ${err}`
+                    }); return;}
+                    retire = true;
+                }else{
+                
                 // LOADING THE JSON AND SETTING THE CURRECT SELECTED CHARACTER'S XP TO 0
                 let xpJSON = await fs.promises.readFile(`./servers/${interaction.guildId}/xp.json`,'utf-8');
                 let xpObj = JSON.parse(xpJSON);
@@ -253,8 +272,10 @@ async function createButtonEvents(interaction, replyMessage, player,  characterE
                     removeTiers.push(role);
                 } player.roles.remove(removeTiers);
                 return;
+            }
         }
         // ALWAYS UPDATING THE INTERACCTION THAT WAY DISCORD DOESN'T THIINK THAT THE COMMAND FAILED
+        if (!retire){
         try{
         await btnInteraction.update({
             embeds:[ characterEmbeds[index] ]
@@ -262,7 +283,8 @@ async function createButtonEvents(interaction, replyMessage, player,  characterE
             console.log(err);
             await btnInteraction.update({
                 embeds:[], components: [], content: `[ERROR] ${err}`
-        }); return;}
+        }); return;}}
+    }catch{}
     });
 }
 

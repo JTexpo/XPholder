@@ -107,6 +107,7 @@ async function createButtonEvents(interaction, replyMessage, viewEmbeds){
 
     // WHEN RECIEVING THE MESSAGE
     collector.on('collect', async btnInteraction => {
+        try{
         switch (btnInteraction.customId){
             // IF PREVIOUS DECREMENT THE COUNTER UNLESS THE INDEX IS OUT OF VIEW
             case "vgr_previous":
@@ -123,5 +124,7 @@ async function createButtonEvents(interaction, replyMessage, viewEmbeds){
         await btnInteraction.update({
             embeds:[ viewEmbeds[index] ]
         });
+    }catch{}
     });
+   
 }

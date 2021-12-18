@@ -1,9 +1,8 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const fs = require('fs');
-const { LEVELS, COLOUR, XPHOLDER_ICON_URL } = require('../../config.json');
+const { LEVELS, COLOUR, XPHOLDER_ICON_URL, LEVEL_UP_GIF } = require('../../config.json');
 const { getPlayerLevel } = require('../../xpholder/pkg.js')
 const { MessageEmbed } = require('discord.js');
-
 
 module.exports = {
 data: new SlashCommandBuilder()
@@ -132,7 +131,12 @@ async execute(interaction) {
         for( let CP = awardCP; CP > 0; CP-- ){ newXP += getLevelCP(newXP); }  
     }
     // SETTING THE PLAYERS LEVEL TO THAT XP
+    old_level = getPlayerLevel(serverXpObj[`${player.id}-${charId}`]);
     serverXpObj[`${player.id}-${charId}`] = Math.floor(newXP);
+    new_level = getPlayerLevel(serverXpObj[`${player.id}-${charId}`]);
+
+    let level_up = false;
+    if (old_level["level"] != new_level["level"]){ level_up = true; }
 
     // STORING THE OBJECT BACK INTO THE SERVER JSON
     serverXpJSON = JSON.stringify(serverXpObj);
@@ -149,6 +153,10 @@ async execute(interaction) {
             .setThumbnail(XPHOLDER_ICON_URL)
             .setColor(COLOUR);
     if (memo){ levelUpMessage.addField("memo",memo,false); }
+    if (level_up) { 
+        levelUpMessage.setDescription(`${embedDescription}\nCongrats, you are now lv **${new_level["level"]}**`);
+        levelUpMessage.setImage(LEVEL_UP_GIF); 
+    }
     if (levelUpChannel.isText()){
         levelUpChannel.send({ 
             content: `${player}`,
