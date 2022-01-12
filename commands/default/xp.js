@@ -146,7 +146,7 @@ async function buildCharacterEmbed(interaction, player, characterList, index, se
         .setTitle(`${characterList[index]["name"]}`)
         .setThumbnail(`${characterList[index]["img"]}`)
         .setURL(`${characterList[index]["sheet"]}`)
-        .setFooter(`XPholder Rewards Larger Posts With More XP! Page (${index + 1}/${characterList.length})`)
+        .setFooter({text:`XPholder Rewards Larger Posts With More XP! Page (${index + 1}/${characterList.length})`})
         .setColor(COLOUR)
         .setFields(
             {inline: true, name: "Level", value: `${playerLevel["level"]}`},

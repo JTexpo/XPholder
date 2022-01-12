@@ -104,7 +104,7 @@ try{
             .setImage(LEVEL_UP_GIF)
             .setThumbnail(characterImg)
             .setColor(COLOUR)
-            .setFooter("Wanna Level Up Faster? XPholder Rewards Larger Posts With More XP!");
+            .setFooter({text:"Wanna Level Up Faster? XPholder Rewards Larger Posts With More XP!"});
 
         if (levelUpChannel.isText()){
             levelUpChannel.send({ 

@@ -15,27 +15,27 @@ data: new SlashCommandBuilder()
     .addIntegerOption(option => option
         .setName("character")
         .setDescription("The Player's Character To Be Edited")
+        .setChoices([
+            ["1",1],
+            ["2",2],
+            ["3",3]
+        ])
+        .setRequired(true))
+    .addStringOption(option => option
+        .setName("manage")
+        .setDescription("The Field That You Want To Manage Of A User")
+        .addChoices([
+            ["Set Level","set_level"],
+            ["Set XP","set_xp"],
+            ["Give XP","give_xp"],
+            ["Set CP","set_cp"],
+            ["Give CP","give_cp"]
+        ])
         .setRequired(true))
     .addIntegerOption(option => option
-        .setName("set_level")
-        .setDescription("The Level To Set The Player To")
-        .setRequired(false))
-    .addIntegerOption(option => option
-            .setName("set_xp")
-            .setDescription("The Amount Of XP To Set The Player To")
-            .setRequired(false))
-    .addIntegerOption(option => option
-        .setName("give_xp")
-        .setDescription("The Amount Of XP To Give The Player (Can Be Negative)")
-        .setRequired(false))
-    .addIntegerOption(option => option
-        .setName("set_cp")
-        .setDescription("The Adventure League CP To Set The Player To")
-        .setRequired(false))
-    .addIntegerOption(option => option
-        .setName("give_cp")
-        .setDescription("The Adventure League CP To Give The Player")
-        .setRequired(false))
+        .setName("value")
+        .setDescription("The Value For What Is Being Managed")
+        .setRequired(true))
     .addStringOption(option => option
         .setName("memo")
         .setDescription("A Small Note On Why The Reward")
@@ -62,12 +62,9 @@ async execute(interaction) {
     // GRABING THE INPUTS
     const character = interaction.options.getInteger("character");
     const player = interaction.options.getUser("player");
-    const playerLevel = interaction.options.getInteger("set_level");
-    const playerXP = interaction.options.getInteger("set_xp");
-    const awardXP = interaction.options.getInteger("give_xp");
-    const playerCP = interaction.options.getInteger("set_cp");
-    const awardCP = interaction.options.getInteger("give_cp");
+    const manage = interaction.options.getString("manage")
     const memo = interaction.options.getString("memo");
+    const value = interaction.options.getInteger("value");
 
     let embedDescription;
     let embedTitle;
@@ -80,59 +77,49 @@ async execute(interaction) {
             ephemeral: true,
     }); return;}
 
-    // CHECKING TO MAKE SURE THAT WE HAVE ONLY ONE OF THE FOUR OPTIONS
-    if ( ( (playerLevel? 1:0) + (awardXP? 1:0) + (playerCP? 1:0) + (awardCP? 1:0) + (playerXP? 1:0) ) > 1){
-        await interaction.editReply({ 
-            content: "You Provided Too Many Options, Please Only Chose One From : `set_level` `set_xp` `give_xp` `set_cp` `give_xp`",
-            ephemeral: true
-        }); return;
-    }else if ( ( (playerLevel? 1:0) + (awardXP? 1:0) + (playerCP? 1:0) + (awardCP? 1:0) + (playerXP? 1:0) ) == 0){
-        await interaction.editReply({ 
-            content: "You Did Not Provide An Option, Please Only Chose One From : `set_level` `set_xp` `give_xp` `set_cp` `give_xp`",
-            ephemeral: true
-        }); return;
-    }
-
     // LOADING THE XP FILE AND UPDATING THE PLAYERS XP TO BE THE APPROVED LEVEL
     let serverXpJSON = await fs.promises.readFile(`./servers/${interaction.guildId}/xp.json`,"utf-8");
     let serverXpObj = JSON.parse(serverXpJSON);
 
     // LOGIC TO FIND WHAT THE NEW PLAYER XP NEEDS TO BE SET TO
     let newXP = 0;
-    if (playerLevel){
-        if (playerLevel > 20 || playerLevel < 1){
-            await interaction.editReply({ 
-                content: 'Please Chose A Number Between 1 And 20 For The `set_level`',
-                ephemeral: true,
-        }); return;}
-        embedTitle = "Level Set!"
-        embedDescription = `${interaction.user} Is Setting ${player}'s Level To **${playerLevel}**`;
-        for (let lvl = 1; lvl < playerLevel; lvl++){ newXP += LEVELS[`${lvl}`]; }
-    // SETTING THE PLAYERS XP TO THE INPUT XP
-    }else if(playerXP){ 
-        embedTitle = "XP Set!"
-        embedDescription = `${interaction.user} Is Setting ${player}'s XP To **${playerXP}**`;
-        newXP = playerXP;
-    // ADDING THE NEW XP TO THE EXISTING XP
-    }else if(awardXP){ 
-        embedTitle = "XP Rewarded!"
-        embedDescription = `${interaction.user} Is Awarding ${player} **${awardXP} XP**`;
-        newXP = serverXpObj[`${player.id}-${charId}`] + awardXP;
-    // FOR LOOP TO BUILD THE NEW CP
-    }else if(playerCP){ 
-        embedTitle = "CP Set!"
-        embedDescription = `${interaction.user} Is Setting ${player}'s CP To **${playerCP}**`;
-        for( let CP = playerCP; CP > 0; CP-- ){ newXP += getLevelCP(newXP); }
-    // GRABBING THE PLAYERS LEVEL AND THEN USING THE SAME FOR LOOP FOR SETTING THE CP
-    }else if(awardCP){
-        embedTitle = "CP Rewarded!"
-        embedDescription = `${interaction.user} Is Awarding ${player} **${awardCP} CP**`;
-        newXP = serverXpObj[`${player.id}-${charId}`];
-        for( let CP = awardCP; CP > 0; CP-- ){ newXP += getLevelCP(newXP); }  
+    switch(manage){
+        case "set_level":
+            if (value > 20 || value < 1){
+                await interaction.editReply({ 
+                    content: 'Please Chose A Number Between 1 And 20 For The `set_level`',
+                    ephemeral: true,
+            }); return;}
+            embedTitle = "Level Set!"
+            embedDescription = `${interaction.user} Is Setting ${player}'s Level To **${value}**`;
+            for (let lvl = 1; lvl < value; lvl++){ newXP += LEVELS[`${lvl}`]; }
+            break;
+        case "set_xp":
+            embedTitle = "XP Set!"
+            embedDescription = `${interaction.user} Is Setting ${player}'s XP To **${value}**`;
+            newXP = value;
+            break;
+        case "give_xp":
+            embedTitle = "XP Rewarded!"
+            embedDescription = `${interaction.user} Is Awarding ${player} **${value} XP**`;
+            newXP = serverXpObj[`${player.id}-${charId}`] + value;
+            break;
+        case "set_cp":
+            embedTitle = "CP Set!"
+            embedDescription = `${interaction.user} Is Setting ${player}'s CP To **${value}**`;
+            for( let CP = value; CP > 0; CP-- ){ newXP += getLevelCP(newXP); }
+            break;
+        case "give_cp":
+            embedTitle = "CP Rewarded!"
+            embedDescription = `${interaction.user} Is Awarding ${player} **${value} CP**`;
+            newXP = serverXpObj[`${player.id}-${charId}`];
+            for( let CP = value; CP > 0; CP-- ){ newXP += getLevelCP(newXP); }  
+            break
     }
+
     // SETTING THE PLAYERS LEVEL TO THAT XP
     old_level = getPlayerLevel(serverXpObj[`${player.id}-${charId}`]);
-    serverXpObj[`${player.id}-${charId}`] = Math.floor(newXP);
+    serverXpObj[`${player.id}-${charId}`] = Math.ceil(newXP);
     new_level = getPlayerLevel(serverXpObj[`${player.id}-${charId}`]);
 
     let level_up = false;

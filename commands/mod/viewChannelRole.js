@@ -86,7 +86,7 @@ Bellow is a lot of information, so to help make it less intimidating, the follow
 The XP formula is : 
 **(channel_xp + words / 100 ) * (1 + words / 100) * role**`)
     .setThumbnail(interaction.client.user.displayAvatarURL())
-    .setFooter("Don't Like What You See? Change It With /set_game_xp")
+    .setFooter({text:"Don't Like What You See? Change It With /set_game_xp"})
     .setColor(COLOUR);
     for (const field of fields){ embed.addField(field["name"],field["value"],field["inline"]); }
     return embed;

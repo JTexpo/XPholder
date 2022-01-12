@@ -14,8 +14,12 @@ data: new SlashCommandBuilder()
     .addIntegerOption(option => option
         .setName("character")
         .setDescription("Which Character They Are Approving")
-        .setRequired(true))
-        ,
+        .setChoices([
+            ["Character 1",1],
+            ["Character 2",2],
+            ["Character 3",3]
+        ])
+        .setRequired(true)),
 async execute(interaction) {
     // RESTRICTING THE COMMAND FOR ONLY THOSE WHO ARE THE MODS OF THE SERVER
     let serverConfigObj = {};

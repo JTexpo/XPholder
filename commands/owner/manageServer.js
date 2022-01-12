@@ -40,6 +40,28 @@ data: new SlashCommandBuilder()
     .addIntegerOption(option => option
         .setName("approve_level")
         .setDescription("The New Default Level To Approve People To")
+        .setChoices([
+            ["1",1],
+            ["2",2],
+            ["3",3],
+            ["4",4],
+            ["5",5],
+            ["6",6],
+            ["7",7],
+            ["8",8],
+            ["9",9],
+            ["10",10],
+            ["11",11],
+            ["12",12],
+            ["13",13],
+            ["14",14],
+            ["15",15],
+            ["16",16],
+            ["17",17],
+            ["18",18],
+            ["19",19],
+            ["20",20]
+        ])
         .setRequired(false))
     .addStringOption(option => option
         .setName("approve_message")
@@ -48,6 +70,11 @@ data: new SlashCommandBuilder()
     .addIntegerOption(option => option
             .setName("character_count")
             .setDescription("The New Max Characters Per One Player")
+            .setChoices([
+                ["1",1],
+                ["2",2],
+                ["3",3]
+            ])
             .setRequired(false))
         ,
 async execute(interaction) {
