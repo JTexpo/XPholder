@@ -107,7 +107,7 @@ try{
             .setFooter({text:"Wanna Level Up Faster? XPholder Rewards Larger Posts With More XP!"});
 
         if (levelUpChannel.isText()){
-            levelUpChannel.send({ 
+            await levelUpChannel.send({ 
                 content: `${message.member.user}`,
                 embeds: [levelUpMessage] 
             });

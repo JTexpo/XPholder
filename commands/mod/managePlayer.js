@@ -145,7 +145,7 @@ async execute(interaction) {
         levelUpMessage.setImage(LEVEL_UP_GIF); 
     }
     if (levelUpChannel.isText()){
-        levelUpChannel.send({ 
+        await levelUpChannel.send({ 
             content: `${player}`,
             embeds: [levelUpMessage] 
         });

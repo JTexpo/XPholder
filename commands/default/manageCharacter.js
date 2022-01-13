@@ -10,6 +10,11 @@ data: new SlashCommandBuilder()
     .addIntegerOption(option => option
         .setName("character")
         .setDescription("Which Character You Are Editing")
+        .setChoices([
+            ["1",1],
+            ["2",2],
+            ["3",3]
+        ])
         .setRequired(true))
     .addStringOption(option => option
         .setName("name")
