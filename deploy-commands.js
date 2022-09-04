@@ -5,21 +5,21 @@ const fs = require('fs');
 const dotenv = require('dotenv');
 dotenv.config();
 
-const {CLIENT_ID, TESTING_SERVER_ID} = require("./config.json");
+const {CLIENT_ID, TESTING_SERVER_ID} = require("./xpholder/config.json");
 
 
 const commands = [];
 let commandsPath = [
-    "default",
+    "everyone",
     "owner",
 	"mod"
 ];
 let commandCollection = [];
 
 for (const path  of commandsPath) {
-    commandCollection = fs.readdirSync(`./commands/${path}`).filter(file => file.endsWith('.js'));
+    commandCollection = fs.readdirSync(`./xpholder/commands/${path}`).filter(file => file.endsWith('.js'));
     for(const file of commandCollection){
-        const command = require(`./commands/${path}/${file}`);
+        const command = require(`./xpholder/commands/${path}/${file}`);
         console.log(command);
         commands.push(command.data.toJSON());
     }
@@ -32,8 +32,7 @@ const rest = new REST({ version: '9' }).setToken(process.env.DISCORD_TOKEN);
 		console.log('Started refreshing application (/) commands.');
 
 		await rest.put(
-			//Routes.applicationGuildCommands(CLIENT_ID, TESTING_SERVER_ID),
-			Routes.applicationCommands(CLIENT_ID),
+			Routes.applicationGuildCommands(CLIENT_ID, TESTING_SERVER_ID),
 			{ body: commands },
 		);
 
