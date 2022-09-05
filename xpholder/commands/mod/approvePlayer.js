@@ -64,6 +64,8 @@ module.exports = {
         const guild = interaction.member.guild
         const player = await guild.members.fetch(user.id);
 
+        let hasCharacter = await guildService.getCharacter(`${player.id}-${characterNumber}`);
+
         /*
         ------------
         VALIDATION 2
@@ -71,6 +73,10 @@ module.exports = {
         */
         if (characterNumber > guildService.config.characterCount) {
             await interaction.editReply(`Sorry, this server is configured for ${characterNumber} character(s). To change, please use \`/edit_config\``);
+            return;
+        }
+        if (hasCharacter) {
+            await interaction.editReply("Sorry, but that character exists. Please retire first.");
             return;
         }
 
@@ -125,7 +131,8 @@ module.exports = {
         INIT CHARACTER
         --------------
         character - schema :
-            character_id   : NUMBER
+            character_id   : STRING
+            character_index: NUMBER
             name           : STRING
             sheet_url      : STRING
             picture_url    : STRING
@@ -133,7 +140,8 @@ module.exports = {
             xp             : NUMBER
         */
         const character = {
-            "character_id": `${characterNumber}`,
+            "character_id": `${player.id}-${characterNumber}`,
+            "character_index": `${characterNumber}`,
             "name": characterName,
             "sheet_url": characterSheet,
             "picture_url": characterUrl ? characterUrl : player.user.avatarURL(),

@@ -8,7 +8,7 @@ const { guildService } = require("./xpholder/services/guild");
 const { sqlLite3DatabaseService } = require("./xpholder/database/sqlite");
 
 const { getActiveCharacterIndex, getXp, getRoleMultiplier, getLevelInfo, getTier, logCommand, logError } = require("./xpholder/utils");
-const { XPHOLDER_COLOUR } = require("./xpholder/config.json")
+const { XPHOLDER_COLOUR, XPHOLDER_ICON_URL } = require("./xpholder/config.json")
 /*
 -----------------------
 LOADING ENV VARS (.env)
@@ -75,7 +75,7 @@ client.on('interactionCreate', async interaction => {
         await new sqlLite3DatabaseService(sqlite3, `./guilds/${guildId}.db`)
     )
     await gService.init();
-    if (!await gService.isRegistered()) {
+    if (!await gService.isRegistered() && command.data.name != "register") {
         // Try Catch on the reply, because this is a restful call, and errors can be found
         try {
             await interaction.reply({
@@ -101,7 +101,7 @@ client.on('interactionCreate', async interaction => {
         await command.execute(gService, interaction);
     } catch (error) {
         try {
-            logError(interaction);
+            logError(interaction, error);
         } catch (error) {
             console.log(error);
         }
@@ -131,6 +131,10 @@ client.on('messageCreate', async message => {
         --------------------------------
         */
         const guildId = `${message.guildId}`;
+        if (!fs.existsSync(`./guilds/${guildId}.db`)){ 
+            return; 
+        }
+
         gService = new guildService(
             await new sqlLite3DatabaseService(sqlite3, `./guilds/${guildId}.db`)
         )
@@ -148,7 +152,7 @@ client.on('messageCreate', async message => {
         const roleBonus = getRoleMultiplier(gService.config["roleBonus"], gService.roles, player._roles);
 
         const characterIndex = getActiveCharacterIndex(gService.config, player._roles);
-        const character = await gService.getCharacter(player.id, characterIndex)
+        const character = await gService.getCharacter(`${player.id}-${characterIndex}`)
         if (!character) { return; }
 
 
@@ -156,10 +160,11 @@ client.on('messageCreate', async message => {
 
         while (channel) {
             if (channel.id in gService.channels) { break; }
-            channel = guild.channels.fetch(channel.parentId);
+            channel = await guild.channels.fetch(channel.parentId);
         }
         if (!channel) { return; }
 
+        if (gService.channels[channel.id] == 0){ return; }
         const xp = getXp(messageCount, roleBonus, gService.channels[channel.id], gService.config["xpPerPostDivisor"], gService.config["xpPerPostFormula"]);
 
         gService.updateCharacterXP(character, xp);
@@ -168,7 +173,24 @@ client.on('messageCreate', async message => {
         const newLevelInfo = getLevelInfo(gService.levels, character["xp"] + xp);
 
         if (oldLevelInfo["level"] != newLevelInfo["level"]) {
-            const tier = getTier(newLevelInfo["level"]);
+            const newTier = getTier(newLevelInfo["level"]);
+
+            const tierRoles = []
+            for (let tierIndex = 1; tierIndex <= 4; tierIndex++){
+                if (tierIndex == newTier["tier"]){ continue; }
+                tierRoles.push(await guild.roles.fetch(gService.config[`tier${tierIndex}RoleId`]));
+            }
+
+            const newTierRole = await guild.roles.fetch(gService.config[`tier${newTier["tier"]}RoleId`]);
+
+            try{
+                const updatedPlayer = await player.roles.remove(tierRoles);
+                await updatedPlayer.roles.add(newTierRole);
+            }catch(error){
+                console.log(error);
+            }
+            
+
             let awardChannel;
             try {
                 awardChannel = await guild.channels.fetch(gService.config["levelUpChannelId"]);
@@ -179,14 +201,14 @@ client.on('messageCreate', async message => {
                 .setFields(
                     { name: "Level Up!", value: `${oldLevelInfo["level"]} --> **${newLevelInfo["level"]}**`, inline: true },
                     { name: "Total Character XP", value: `${Math.floor(character["xp"] + xp)}`, inline: true },
-                    { name: "Tier", value: `<@&${gService.config[`tier${tier["tier"]}RoleId`]}>`, inline: true }
+                    { name: "Tier", value: `<@&${gService.config[`tier${newTier["tier"]}RoleId`]}>`, inline: true }
                 )
-                .setThumbnail(character["picture_url"] != "" ? character["picture_url"] : player.user.avatarURL())
+                .setThumbnail((character["picture_url"] != "" && character["picture_url"] !== "null")? character["picture_url"] : XPHOLDER_ICON_URL )
                 .setColor(XPHOLDER_COLOUR)
                 .setFooter({ text: "You can view your characters with /xp" })
 
             if (character["sheet_url"] != "") {
-                levelUpEmbed.setURL(characterObj["sheet_url"]);
+                levelUpEmbed.setURL(character["sheet_url"]);
             }
 
             awardChannel.send({ content: `${player}`, embeds: [levelUpEmbed] });

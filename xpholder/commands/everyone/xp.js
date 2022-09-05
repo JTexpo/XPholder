@@ -26,6 +26,7 @@ module.exports = {
         -------------
         */
         const guild = interaction.member.guild
+        const public = interaction.options.getBoolean("public");
 
         let user = interaction.options.getUser("player");
         if (!user) { user = interaction.user; }
@@ -46,7 +47,7 @@ module.exports = {
 
             if (!character["picture_url"]) { playerCharacters[index]["picture_url"] = player.user.avatarURL(); }
 
-            if (character["character_id"] == activeCharacterIndex){ embedCharacterIndex = index;}
+            if (character["character_index"] == activeCharacterIndex){ embedCharacterIndex = index;}
             characterEmbeds.push(buildCharacterEmbed(guildService, player, character, index));
             index++;
         }
@@ -62,7 +63,7 @@ module.exports = {
         ----------------
         */
         let characterButtons;
-        if (player.id == interaction.user.id) {
+        if (player.id == interaction.user.id && !public) {
             characterButtons = new ActionRowBuilder()
                 .addComponents(
                     new ButtonBuilder()
@@ -141,7 +142,7 @@ function createButtonEvents(guildService, interaction, player, replyMessage, pla
                     break;
                 case "xp_next":
                     retire = false;
-                    pageIndex = (pageIndex + 1) > characterEmbeds.length ? (characterEmbeds.length - 1) : (pageIndex + 1);
+                    pageIndex = (pageIndex + 1) >= characterEmbeds.length ? (characterEmbeds.length - 1) : (pageIndex + 1);
                     await btnInteraction.update({ embeds: [characterEmbeds[pageIndex]] });
                     break;
                 case "xp_set":
@@ -159,25 +160,32 @@ function createButtonEvents(guildService, interaction, player, replyMessage, pla
                     const newCharacterLevelInfo = getLevelInfo(guildService.levels, newCharacter["xp"]);
                     const newCharacterTier = getTier(parseInt(newCharacterLevelInfo["level"]));
 
+                    let removeRoles = []
+                    let addRoles = []
                     /*
                     ------------------------
                     SWAPPING CHARACTER ROLES
                     ------------------------
                     */
-                    const oldCharacterRole = await guild.roles.fetch(guildService.config[`character${oldCharacter["character_id"]}RoleId`]);
-                    const newCharacterRole = await guild.roles.fetch(guildService.config[`character${newCharacter["character_id"]}RoleId`]);
-                    await player.roles.remove(oldCharacterRole);
-                    await player.roles.add(newCharacterRole);
+                    for (let charIndex = 1; charIndex <= guildService.config.characterCount; charIndex++){
+                        if (charIndex == parseInt(newCharacter["character_index"])){ continue; }
+                        removeRoles.push(await guild.roles.fetch(guildService.config[`character${charIndex}RoleId`]));
+                    }
+                    addRoles.push(await guild.roles.fetch(guildService.config[`character${newCharacter["character_index"]}RoleId`]));
 
                     /*
                     -------------------
                     SWAPPING TIER ROLES
                     -------------------
                     */
-                    const oldTierRole = await guild.roles.fetch(guildService.config[`tier${oldCharacterTier["tier"]}RoleId`]);
-                    const newTierRole = await guild.roles.fetch(guildService.config[`tier${newCharacterTier["tier"]}RoleId`]);
-                    await player.roles.remove(oldTierRole);
-                    await player.roles.add(newTierRole);
+                    for (let tierIndex = 1; tierIndex <= 4; tierIndex++){
+                        if (tierIndex == newCharacterTier["tier"]){ continue; }
+                        removeRoles.push(await guild.roles.fetch(guildService.config[`tier${tierIndex}RoleId`]));
+                    }
+                    addRoles.push(await guild.roles.fetch(guildService.config[`tier${newCharacterTier["tier"]}RoleId`]));
+
+                    const updatedPlayer = await player.roles.remove(removeRoles);
+                    await updatedPlayer.roles.add(addRoles);
 
                     embedCharacterIndex = pageIndex;
                     await btnInteraction.update({ embeds: [characterEmbeds[pageIndex]] });
@@ -213,13 +221,8 @@ function createButtonEvents(guildService, interaction, player, replyMessage, pla
                         await guildService.deleteCharacter(playerCharacters[pageIndex]);
 
                         let copyOfEmbed = characterEmbeds[pageIndex];
-                        const character = playerCharacters[embedCharacterIndex];
-                        const characterLevelInfo = getLevelInfo(guildService.levels, character["xp"]);
-                        const characterTier = getTier(parseInt(characterLevelInfo["level"]));
-
-                        const characterRole = await guild.roles.fetch(guildService.config[`character${character["character_id"]}RoleId`]);
-                        const tierRole = await guild.roles.fetch(guildService.config[`tier${characterTier["tier"]}RoleId`]);
                         let awardChannel;
+                        let removeRoles = []
                         /*
                         ----------
                         VALIDATION
@@ -232,12 +235,22 @@ function createButtonEvents(guildService, interaction, player, replyMessage, pla
                             await btnInteraction.update({content:`Sorry, but I can't find the **level_up_channel**.\nPlease contact ${owner} and ask them to set a new **level_up_channel** with : \`/edit_config\``});
                             return;
                         }
+                        /*
+                        ------------------------
+                        REMOVING CHARACTER ROLES
+                        ------------------------
+                        */
+                        for (let charIndex = 1; charIndex <= guildService.config.characterCount; charIndex++){
+                            removeRoles.push(await guild.roles.fetch(guildService.config[`character${charIndex}RoleId`]));
+                        }
+                        for (let tierIndex = 1; tierIndex <= 4; tierIndex++){
+                            removeRoles.push(await guild.roles.fetch(guildService.config[`tier${tierIndex}RoleId`]));
+                        }
 
                         copyOfEmbed.setDescription("**RETIRED**")
                         copyOfEmbed.setColor(XPHOLDER_RETIRE_COLOUR);
                         
-                        await player.roles.remove(characterRole);
-                        await player.roles.remove(tierRole);
+                        await player.roles.remove(removeRoles);
 
                         await awardChannel.send({ content: `${player} <@&${guildService.config["moderationRoleId"]}>`, embeds: [copyOfEmbed] });
                         await btnInteraction.update({embeds: [copyOfEmbed], components: []});

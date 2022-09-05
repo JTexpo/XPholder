@@ -46,7 +46,7 @@ module.exports = {
         const user = interaction.user;
         const player = await guild.members.fetch(user.id);
 
-        const character = await guildService.getCharacter(player.id, characterNumber);
+        const character = await guildService.getCharacter(`${player.id}-${characterNumber}`);
 
         if (!character) {
             await interaction.editReply("Sorry, but that character does not exist");
@@ -88,7 +88,8 @@ module.exports = {
         UPDATE CHARACTER
         ----------------
         character - schema :
-            character_id   : NUMBER
+            character_id   : STRING
+            character_index: NUMBER
             name           : STRING
             sheet_url      : STRING
             picture_url    : STRING
@@ -96,7 +97,8 @@ module.exports = {
             xp             : NUMBER
         */
         const updatedCharacter = {
-            "character_id": `${characterNumber}`,
+            "character_id": `${player.id}-${characterNumber}`,
+            "character_index": `${characterNumber}`,
             "name": characterName,
             "sheet_url": characterSheet ? characterSheet : character["sheet_url"],
             "picture_url": characterUrl ? characterUrl : character["picture_url"],

@@ -44,17 +44,6 @@ module.exports = {
     ,
     async execute(guildService, interaction) {
         /*
-        ----------
-        VALIDATION
-        ----------
-        */
-        if (!guildService.isMod(interaction.member._roles) &&
-            interaction.user.id != interaction.guild.ownerId) {
-            await interaction.editReply("Sorry, you do not have the right role to use this command.");
-            return;
-        }
-
-        /*
         --------------
         INITALIZATIONS
         --------------
@@ -68,7 +57,7 @@ module.exports = {
         const user = interaction.user;
         const player = await guild.members.fetch(user.id);
 
-        let character = await guildService.getCharacter(player.id, characterId);
+        let character = await guildService.getCharacter(`${player.id}-${characterId}`);
         let awardChannel;
 
         /*
@@ -134,7 +123,7 @@ module.exports = {
         let awardEmbed = new EmbedBuilder()
             .setDescription(memo)
             .setFooter({ text: `Like the bot? Click the title to visit the dev server!` })
-            .setThumbnail(character["picture_url"] != "" ? character["picture_url"] : XPHOLDER_ICON_URL)
+            .setThumbnail((character["picture_url"] != "" && character["picture_url"] !== "null") ? character["picture_url"] : XPHOLDER_ICON_URL)
             .setURL(DEV_SERVER_URL)
 
         let levelFieldName = "Level";
@@ -204,7 +193,8 @@ module.exports = {
             UPDATE CHARACTER
             ----------------
             character - schema :
-                character_id   : NUMBER
+                character_id   : STRING
+                character_index: NUMBER
                 name           : STRING
                 sheet_url      : STRING
                 picture_url    : STRING
@@ -213,6 +203,7 @@ module.exports = {
             */
             const characterSchema = {
                 "character_id": character["character_id"],
+                "character_index": character["character_index"],
                 "player_id": character["player_id"],
                 "xp": character["xp"],
             };

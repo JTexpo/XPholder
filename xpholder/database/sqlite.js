@@ -9,22 +9,26 @@ class sqlLite3DatabaseService {
         return await new Promise(async resolve => {
             this.database = await new this.sqlite3.Database(this.databaseName, (err) => {
                 if (err) { console.error(err.message); resolve(false); return; }
+                resolve(this);
             });
-            resolve(this);
         })
     }
 
-    closeDatabase() {
-        return this.database.close((err) => {
-            if (err) { console.error(err.message); resolve(false); return; }
-        });
+    async closeDatabase() {
+        return await new Promise(async resolve => {
+            this.database.close((err) => {
+                if (err) { console.error(err.message); resolve(false); return; }
+                resolve(this);
+            });
+            
+        })
     }
 
     async execute(query) {
         return await new Promise((resolve, reject) => {
             this.database.run(query, (err, data) => {
                 if (err) { console.error(err.message); resolve(false); return; }
-                resolve(data);
+                resolve(true);
             })
         });
     }

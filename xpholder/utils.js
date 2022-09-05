@@ -276,7 +276,8 @@ function buildCharacterEmbed(guildService, player, characterObj) {
 
     characterObj : object
     {
-        "character_id"   : 0 -> 10
+        "character_id"   : player_id-character_index
+        "character_index": 0 -> 10
         "name"           : "My Character"
         "sheet_url"      : "https://www.dndbeyond.com"
         "picture_url"    : "picture url"
@@ -299,7 +300,7 @@ function buildCharacterEmbed(guildService, player, characterObj) {
 
     let characterEmbed = new EmbedBuilder()
         .setTitle(characterObj["name"])
-        .setThumbnail(characterObj["picture_url"])
+        .setThumbnail((characterObj["picture_url"] != "" && characterObj["picture_url"] !== "null")? characterObj["picture_url"] : XPHOLDER_ICON_URL )
         .setFields(
             { inline: true, name: "Level", value: `${levelInfo["level"]}` },
             { inline: true, name: "Role Boost", value: `${roleBonus}` },
@@ -307,11 +308,11 @@ function buildCharacterEmbed(guildService, player, characterObj) {
 
             { inline: true, name: "Total Character XP", value: `${Math.floor(characterObj["xp"])}` },
             { inline: true, name: "Current Level XP", value: `${Math.floor(levelInfo["levelXp"])}` },
-            { inline: true, name: "Next Level XP", value: `${levelInfo["xpToNext"]}` },
+            { inline: true, name: "Next Level XP", value: `${Math.floor(levelInfo["xpToNext"])}` },
 
             { inline: false, name: `Progress`, value: `${progress}` }
         )
-        .setFooter({ text: `Dont Like What You See? Try /edit_character (${characterObj["character_id"]}/${guildService.config["characterCount"]})` })
+        .setFooter({ text: `Dont Like What You See? Try /edit_character (${characterObj["character_index"]}/${guildService.config["characterCount"]})` })
         .setColor(XPHOLDER_COLOUR);
 
     if (characterObj["sheet_url"] != "") {
