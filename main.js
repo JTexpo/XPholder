@@ -71,7 +71,7 @@ client.on('interactionCreate', async interaction => {
     const guildId = `${interaction.guildId}`;
 
     // LOADING GUILD SERVICE
-    gService = new guildService(
+    const gService = new guildService(
         await new sqlLite3DatabaseService(sqlite3, `./guilds/${guildId}.db`)
     )
     await gService.init();
@@ -135,7 +135,7 @@ client.on('messageCreate', async message => {
             return; 
         }
 
-        gService = new guildService(
+        const gService = new guildService(
             await new sqlLite3DatabaseService(sqlite3, `./guilds/${guildId}.db`)
         )
         await gService.init();
