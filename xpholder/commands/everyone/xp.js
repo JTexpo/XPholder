@@ -1,7 +1,7 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { ActionRowBuilder, ButtonBuilder, EmbedBuilder } = require('discord.js');
 
-const { XPHOLDER_RETIRE_COLOUR } = require("../../config.json");
+const { XPHOLDER_RETIRE_COLOUR, XPHOLDER_APPROVE_COLOUR, XPHOLDER_LEVEL_UP_COLOUR } = require("../../config.json");
 const { buildCharacterEmbed, getActiveCharacterIndex, getTier, getLevelInfo } = require("../../utils");
 
 
@@ -134,6 +134,12 @@ function createButtonEvents(guildService, interaction, player, replyMessage, pla
 
     collector.on('collect', async btnInteraction => {
         try {
+            let removeRoles = [];
+            let addRoles = [];
+            let characterEmbedData;
+            let copyOfEmbed;
+            let freezeMessage = "";
+
             switch (btnInteraction.customId) {
                 case "xp_previous":
                     retire = false;
@@ -160,8 +166,7 @@ function createButtonEvents(guildService, interaction, player, replyMessage, pla
                     const newCharacterLevelInfo = getLevelInfo(guildService.levels, newCharacter["xp"]);
                     const newCharacterTier = getTier(parseInt(newCharacterLevelInfo["level"]));
 
-                    let removeRoles = []
-                    let addRoles = []
+                    
                     /*
                     ------------------------
                     SWAPPING CHARACTER ROLES
@@ -188,7 +193,23 @@ function createButtonEvents(guildService, interaction, player, replyMessage, pla
                     await updatedPlayer.roles.add(addRoles);
 
                     embedCharacterIndex = pageIndex;
-                    await btnInteraction.update({ embeds: [characterEmbeds[pageIndex]] });
+
+                    /*
+                    --------------
+                    BUILDING EMBED
+                    --------------
+                    */
+                    characterEmbedData = characterEmbeds[pageIndex].data;
+                    copyOfEmbed = new EmbedBuilder()
+                        .setTitle(characterEmbedData.title)
+                        .setDescription("**SUCCESS:** Character Role Added")
+                        .setFields(characterEmbedData.fields)
+                        .setThumbnail(characterEmbedData.thumbnail.url)
+                        .setFooter(characterEmbedData.footer)
+                        .setColor(XPHOLDER_APPROVE_COLOUR);
+
+                    await btnInteraction.update({ embeds: [copyOfEmbed] });
+
                     break;
                 
                 case "xp_freeze":
@@ -198,19 +219,38 @@ function createButtonEvents(guildService, interaction, player, replyMessage, pla
 
                     if (player._roles.includes(xpFreezeRoleId)){
                         await player.roles.remove(xpFreezeRole);
-                    }else{ await player.roles.add(xpFreezeRole); }
+                        freezeMessage = "Removed";
+                    }else{ 
+                        await player.roles.add(xpFreezeRole); 
+                        freezeMessage = "Added";
+                    }
 
-                    await btnInteraction.update({ embeds: [characterEmbeds[pageIndex]] });
+                    /*
+                    --------------
+                    BUILDING EMBED
+                    --------------
+                    */
+                    characterEmbedData = characterEmbeds[pageIndex].data;
+                    copyOfEmbed = new EmbedBuilder()
+                        .setTitle(characterEmbedData.title)
+                        .setDescription(`**SUCCESS:** XP Freeze Role ${freezeMessage}`)
+                        .setFields(characterEmbedData.fields)
+                        .setThumbnail(characterEmbedData.thumbnail.url)
+                        .setFooter(characterEmbedData.footer)
+                        .setColor(XPHOLDER_LEVEL_UP_COLOUR);
+
+                    await btnInteraction.update({ embeds: [copyOfEmbed] });
+
                     break;
                 
                 case "xp_retire":
                     if (!retire){
                         retire = true;
 
-                        let characterEmbedData = characterEmbeds[pageIndex].data;
-                        const copyOfEmbed = new EmbedBuilder()
+                        characterEmbedData = characterEmbeds[pageIndex].data;
+                        copyOfEmbed = new EmbedBuilder()
                             .setTitle(characterEmbedData.title)
-                            .setDescription("**WARNING** : Are you sure you want to retire?\n\nClick \`retire\` again to retire. Else, click other button to cancel.")
+                            .setDescription("**WARNING:** Are you sure you want to retire?\n\nClick \`retire\` again to retire. Else, click other button to cancel.")
                             .setFields(characterEmbedData.fields)
                             .setThumbnail(characterEmbedData.thumbnail.url)
                             .setFooter(characterEmbedData.footer)
@@ -220,9 +260,9 @@ function createButtonEvents(guildService, interaction, player, replyMessage, pla
                     }else{
                         await guildService.deleteCharacter(playerCharacters[pageIndex]);
 
-                        let copyOfEmbed = characterEmbeds[pageIndex];
-                        let awardChannel;
-                        let removeRoles = []
+                        copyOfEmbed = characterEmbeds[pageIndex];
+                        awardChannel;
+                        removeRoles = []
                         /*
                         ----------
                         VALIDATION

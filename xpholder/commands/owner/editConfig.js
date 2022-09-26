@@ -112,7 +112,7 @@ module.exports = {
         INITALIZATIONS
         --------------
         */
-        const MAX_CHARS = 5;
+        const MAX_CHARS = 10;
         const ROLES = interaction.guild.roles;
 
         const approveMessage = interaction.options.getString("approve_message");
