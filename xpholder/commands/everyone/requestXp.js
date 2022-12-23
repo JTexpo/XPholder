@@ -3,13 +3,13 @@ const { ActionRowBuilder, ButtonBuilder, EmbedBuilder } = require('discord.js');
 
 
 const { XPHOLDER_COLOUR, XPHOLDER_ICON_URL, DEV_SERVER_URL, XPHOLDER_LEVEL_UP_COLOUR, XPHOLDER_RETIRE_COLOUR, XPHOLDER_APPROVE_COLOUR } = require("../../config.json");
-const { getLevelInfo, getProgressionBar, awardCPs } = require("../../utils")
+const { getLevelInfo, getProgressionBar, awardCXPs } = require("../../utils")
 
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('request_xp')
-        .setDescription('Rewards The Player With XP / CP!')
+        .setDescription('Rewards The Player With XP / CXP!')
 
         .addIntegerOption(option => option
             .setName("character")
@@ -24,8 +24,8 @@ module.exports = {
                 { name: "Set Level", value: "set_level" },
                 { name: "Set XP", value: "set_xp" },
                 { name: "Get XP", value: "give_xp" },
-                { name: "Set CP", value: "set_cp" },
-                { name: "Get CP", value: "give_cp" }
+                { name: "Set CXP", value: "set_cxp" },
+                { name: "Get CXP", value: "give_cxp" }
             )
             .setRequired(true))
         .addIntegerOption(option => option
@@ -101,11 +101,11 @@ module.exports = {
             case "give_xp":
                 character["xp"] += value;
                 break;
-            case "set_cp":
-                character["xp"] = awardCPs(0, value, guildService.levels);
+            case "set_cxp":
+                character["xp"] = awardCXPs(0, value, guildService.levels);
                 break;
-            case "give_cp":
-                character["xp"] = awardCPs(character["xp"], value, guildService.levels);
+            case "give_cxp":
+                character["xp"] = awardCXPs(character["xp"], value, guildService.levels);
                 break;
         }
 
@@ -161,20 +161,20 @@ module.exports = {
                     { inline: false, name: "Progress", value: progressBar },
                 )
                 break;
-            case "set_cp":
-                awardEmbed.setTitle(`${character["name"]}'s CP Set Request`)
+            case "set_cxp":
+                awardEmbed.setTitle(`${character["name"]}'s CXP Set Request`)
                 awardEmbed.setFields(
                     { inline: true, name: "Level", value: newLevelInfo["level"] },
-                    { inline: true, name: "Total CP", value: `${value}` },
+                    { inline: true, name: "Total CXP", value: `${value}` },
                     { inline: true, name: "Requested By", value: `${interaction.user}` },
                     { inline: false, name: "Progress", value: progressBar },
                 )
                 break;
-            case "give_cp":
-                awardEmbed.setTitle(`${character["name"]}'s CP Request`)
+            case "give_cxp":
+                awardEmbed.setTitle(`${character["name"]}'s CXP Request`)
                 awardEmbed.setFields(
                     { inline: true, name: levelFieldName, value: levelFieldValue },
-                    { inline: true, name: "CP Recieved", value: `${value}` },
+                    { inline: true, name: "CXP Recieved", value: `${value}` },
                     { inline: true, name: "Requested By", value: `${interaction.user}` },
                     { inline: false, name: "Progress", value: progressBar },
                 )

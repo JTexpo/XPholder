@@ -7,14 +7,14 @@ const { XPHOLDER_COLOUR, XPHOLDER_ICON_URL, DEV_SERVER_URL, XPHOLDER_RETIRE_COLO
 AWARDS
 ------
 */
-function awardCPs(startingXp, cp, levels) {
-    for (; cp > 0; cp--) {
-        startingXp += awardCP(startingXp, levels)
+function awardCXPs(startingXp, cxp, levels) {
+    for (; cxp > 0; cxp--) {
+        startingXp += awardCXP(startingXp, levels)
     }
     return startingXp;
 }
 
-function awardCP(xp, levels) {
+function awardCXP(xp, levels) {
     const levelInfo = getLevelInfo(levels, xp);
 
     if (parseInt(levelInfo["level"]) < 4) {
@@ -243,7 +243,7 @@ function getTier(level) {
     // WotC rules for which levels are in which tier
     if (level <= 4) { return { "tier": 1, "nextTier": 2 }; }
     else if (level <= 10) { return { "tier": 2, "nextTier": 3 }; }
-    else if (level <= 17) { return { "tier": 3, "nextTier": 4 }; }
+    else if (level <= 16) { return { "tier": 3, "nextTier": 4 }; }
     return { "tier": 4, "nextTier": 4 };
 }
 
@@ -437,7 +437,7 @@ function sqlInjectionCheck(myString) {
 }
 
 module.exports = {
-    awardCPs,
+    awardCXPs,
     getActiveCharacterIndex,
     getLevelInfo,
     getRoleMultiplier,
