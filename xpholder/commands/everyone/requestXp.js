@@ -3,13 +3,13 @@ const { ActionRowBuilder, ButtonBuilder, EmbedBuilder } = require('discord.js');
 
 
 const { XPHOLDER_COLOUR, XPHOLDER_ICON_URL, DEV_SERVER_URL, XPHOLDER_LEVEL_UP_COLOUR, XPHOLDER_RETIRE_COLOUR, XPHOLDER_APPROVE_COLOUR } = require("../../config.json");
-const { getLevelInfo, getProgressionBar, awardCXPs } = require("../../utils")
+const { getLevelInfo, getProgressionBar, awardCPs } = require("../../utils")
 
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('request_xp')
-        .setDescription('Rewards The Player With XP / CXP!')
+        .setDescription('Rewards The Player With XP / CP!')
 
         .addIntegerOption(option => option
             .setName("character")
@@ -24,8 +24,8 @@ module.exports = {
                 { name: "Set Level", value: "set_level" },
                 { name: "Set XP", value: "set_xp" },
                 { name: "Get XP", value: "give_xp" },
-                { name: "Set CXP", value: "set_cxp" },
-                { name: "Get CXP", value: "give_cxp" }
+                { name: "Set CP", value: "set_cp" },
+                { name: "Get CP", value: "give_cp" }
             )
             .setRequired(true))
         .addIntegerOption(option => option
@@ -51,7 +51,7 @@ module.exports = {
         const characterId = interaction.options.getInteger("character");
         const awardType = interaction.options.getString("award_type");
         const value = interaction.options.getInteger("value");
-        const memo = interaction.options.getString("memo");
+        let memo = interaction.options.getString("memo");
 
         const guild = interaction.member.guild;
         const user = interaction.user;
@@ -101,11 +101,11 @@ module.exports = {
             case "give_xp":
                 character["xp"] += value;
                 break;
-            case "set_cxp":
-                character["xp"] = awardCXPs(0, value, guildService.levels);
+            case "set_cp":
+                character["xp"] = awardCPs(0, value, guildService.levels);
                 break;
-            case "give_cxp":
-                character["xp"] = awardCXPs(character["xp"], value, guildService.levels);
+            case "give_cp":
+                character["xp"] = awardCPs(character["xp"], value, guildService.levels);
                 break;
         }
 
@@ -118,6 +118,11 @@ module.exports = {
         const newXp = character["xp"];
         const newLevelInfo = getLevelInfo(guildService.levels, newXp);
         const progressBar = getProgressionBar(newLevelInfo["levelXp"], newLevelInfo["xpToNext"]);
+
+        // giving useful information
+        if (!memo){
+            memo = `Command Requested In <#${interaction.channelId}>`
+        }
 
         // embed inits
         let awardEmbed = new EmbedBuilder()
@@ -161,20 +166,20 @@ module.exports = {
                     { inline: false, name: "Progress", value: progressBar },
                 )
                 break;
-            case "set_cxp":
-                awardEmbed.setTitle(`${character["name"]}'s CXP Set Request`)
+            case "set_cp":
+                awardEmbed.setTitle(`${character["name"]}'s CP Set Request`)
                 awardEmbed.setFields(
                     { inline: true, name: "Level", value: newLevelInfo["level"] },
-                    { inline: true, name: "Total CXP", value: `${value}` },
+                    { inline: true, name: "Total CP", value: `${value}` },
                     { inline: true, name: "Requested By", value: `${interaction.user}` },
                     { inline: false, name: "Progress", value: progressBar },
                 )
                 break;
-            case "give_cxp":
-                awardEmbed.setTitle(`${character["name"]}'s CXP Request`)
+            case "give_cp":
+                awardEmbed.setTitle(`${character["name"]}'s CP Request`)
                 awardEmbed.setFields(
                     { inline: true, name: levelFieldName, value: levelFieldValue },
-                    { inline: true, name: "CXP Recieved", value: `${value}` },
+                    { inline: true, name: "CP Recieved", value: `${value}` },
                     { inline: true, name: "Requested By", value: `${interaction.user}` },
                     { inline: false, name: "Progress", value: progressBar },
                 )
@@ -222,15 +227,16 @@ module.exports = {
                         .setStyle("Danger")
                 );
 
-            const requestMessage = await awardChannel.send({ content: `${player} <@&${guildService.config["moderationRoleId"]}>`, embeds: [awardEmbed], components: [requestButtons] });
-            createButtonEvents(guildService, requestMessage, character, (newXp - oldXp), awardChannel, awardEmbed)
+            //  content: `${player} <@&${guildService.config["moderationRoleId"]}>`,
+            const requestMessage = await awardChannel.send({ embeds: [awardEmbed], components: [requestButtons] });
+            createButtonEvents(guildService, requestMessage, character, (newXp - oldXp), awardChannel, awardEmbed, player)
         }
 
         await interaction.editReply("Success!");
     },
 };
 
-function createButtonEvents(guildService, requestMessage, character, deltaXp, collectorChannel, awardEmbed) {
+function createButtonEvents(guildService, requestMessage, character, deltaXp, collectorChannel, awardEmbed, player) {
     /*
     ------------------
     CREATING COLLECTOR
@@ -258,11 +264,13 @@ function createButtonEvents(guildService, requestMessage, character, deltaXp, co
                     await guildService.updateCharacterXP(character, deltaXp);
 
                     await btnInteraction.update({ embeds: [awardEmbed], components: [] });
+                    await player.send({ embeds: [awardEmbed]});
                     break;
                 case "request_reject":
                     awardEmbed.addFields({ inline: false, name: "Rejected By", value: `${btnInteraction.user}` })
                     awardEmbed.setColor(XPHOLDER_RETIRE_COLOUR)
                     await btnInteraction.update({ embeds: [awardEmbed], components: [] });
+                    await player.send({ embeds: [awardEmbed]});
                     break;
             }
             return;
