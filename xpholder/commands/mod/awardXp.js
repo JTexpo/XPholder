@@ -1,7 +1,7 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { EmbedBuilder } = require('discord.js');
+const { ActionRowBuilder, ButtonBuilder, EmbedBuilder } = require('discord.js');
 
-const { XPHOLDER_COLOUR, XPHOLDER_ICON_URL, DEV_SERVER_URL, XPHOLDER_LEVEL_UP_COLOUR } = require("../../config.json");
+const { XPHOLDER_COLOUR, XPHOLDER_ICON_URL, DEV_SERVER_URL, XPHOLDER_LEVEL_UP_COLOUR, XPHOLDER_RETIRE_COLOUR } = require("../../config.json");
 const { getLevelInfo, getProgressionBar, awardCXPs } = require("../../utils")
 
 
@@ -173,6 +173,7 @@ module.exports = {
             case "set_level":
                 awardEmbed.setTitle(`${character["name"]}'s Level Was Set`)
                 awardEmbed.setFields(
+                    { inline: true, name: "Delta", value: `${Math.floor(oldXp)} -> **${Math.floor(newXp)}**` },
                     { inline: true, name: "Level", value: newLevelInfo["level"] },
                     { inline: true, name: "Set By", value: `${interaction.user}` }
                 )
@@ -180,6 +181,7 @@ module.exports = {
             case "set_xp":
                 awardEmbed.setTitle(`${character["name"]}'s XP Was Set`)
                 awardEmbed.setFields(
+                    { inline: true, name: "Delta", value: `${Math.floor(oldXp)} -> **${Math.floor(newXp)}**` },
                     { inline: true, name: "Level", value: newLevelInfo["level"] },
                     { inline: true, name: "Total XP", value: `${value}` },
                     { inline: true, name: "Set By", value: `${interaction.user}` },
@@ -189,6 +191,7 @@ module.exports = {
             case "give_xp":
                 awardEmbed.setTitle(`${character["name"]}'s Was Awarded XP`)
                 awardEmbed.setFields(
+                    { inline: true, name: "Delta", value: `${Math.floor(oldXp)} -> **${Math.floor(newXp)}**` },
                     { inline: true, name: levelFieldName, value: levelFieldValue },
                     { inline: true, name: "XP Recieved", value: `${value}` },
                     { inline: true, name: "Set By", value: `${interaction.user}` },
@@ -198,6 +201,7 @@ module.exports = {
             case "set_cxp":
                 awardEmbed.setTitle(`${character["name"]}'s CXP Was Set`)
                 awardEmbed.setFields(
+                    { inline: true, name: "Delta", value: `${Math.floor(oldXp)} -> **${Math.floor(newXp)}**` },
                     { inline: true, name: "Level", value: newLevelInfo["level"] },
                     { inline: true, name: "Total CXP", value: `${value}` },
                     { inline: true, name: "Set By", value: `${interaction.user}` },
@@ -207,6 +211,7 @@ module.exports = {
             case "give_cxp":
                 awardEmbed.setTitle(`${character["name"]}'s Was Awarded CXP`)
                 awardEmbed.setFields(
+                    { inline: true, name: "Delta", value: `${Math.floor(oldXp)} -> **${Math.floor(newXp)}**` },
                     { inline: true, name: levelFieldName, value: levelFieldValue },
                     { inline: true, name: "CXP Recieved", value: `${value}` },
                     { inline: true, name: "Set By", value: `${interaction.user}` },
@@ -214,8 +219,75 @@ module.exports = {
                 )
                 break;
         };
-        await awardChannel.send({ content: `${player}`, embeds: [awardEmbed] });
+
+        /*
+        ----------------
+        BUILDING BUTTONS
+        ----------------
+        */
+        const awardButtons = new ActionRowBuilder()
+            .addComponents(
+                new ButtonBuilder()
+                    .setCustomId("awardxp_undo")
+                    .setLabel("Undo")
+                    .setStyle("Danger")
+            );
+
+        const awardMessage = await awardChannel.send({ content: `${player}`, embeds: [awardEmbed] , components: [awardButtons] });
+        
+        createButtonEvents(guildService, interaction, player, awardMessage, character, oldXp)
 
         await interaction.editReply("Success!");
     },
 };
+
+function createButtonEvents(guildService, interaction, player, replyMessage, character, oldXp){
+    /*
+    -------------
+    INITALIZATION
+    -------------
+    */
+    const guild = interaction.member.guild;
+
+    const characterSchema = {
+        "character_id": character["character_id"],
+        "character_index": character["character_index"],
+        "player_id": character["player_id"],
+        "xp": oldXp,
+    };
+
+    let undoAwardEmbed = new EmbedBuilder()
+        .setDescription("XP Reward Undone")
+        .setFooter({ text: `Like the bot? Click the title to visit the dev server!` })
+        .setThumbnail((character["picture_url"] != "" && character["picture_url"] !== "null") ? character["picture_url"] : XPHOLDER_ICON_URL)
+        .setURL(DEV_SERVER_URL)
+        .setColor(XPHOLDER_RETIRE_COLOUR);
+    undoAwardEmbed.setFields(
+        { inline: true, name: "XP", value: `${Math.floor(oldXp)}` },
+        { inline: true, name: "Undone By", value: `${interaction.user}` },
+    );
+    /*
+    ------------------
+    CREATING COLLECTOR
+    ------------------
+    */
+    const filter = btnInteraction => (
+        ['awardxp_undo'].includes(btnInteraction.customId) &&
+        replyMessage.id == btnInteraction.message.id &&
+        interaction.user.id == btnInteraction.user.id
+    );
+    const collectorChannel = interaction.channel;
+    if (!collectorChannel) { return; }
+    const collector = collectorChannel.createMessageComponentCollector({ filter, time: 3_600_000 });
+
+    collector.on('collect', async btnInteraction => {
+        try {
+            switch (btnInteraction.customId) {
+                case "awardxp_undo":
+                    await guildService.setCharacterXP(characterSchema);
+                    await btnInteraction.update({embeds: [undoAwardEmbed], components: []});
+                    break;
+            }
+        }catch(error){console.log(error)}
+    });
+}

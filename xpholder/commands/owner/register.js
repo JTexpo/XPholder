@@ -66,6 +66,8 @@ module.exports = {
 
         config["xpFreezeRoleId"] = (await ROLES.create({ name: "❄️XP Freeze ❄️", color: [223, 247, 250], hoist: true, mentionable: true })).id;
 
+        config["xpShareRoleId"] = (await ROLES.create({ name: "🎁XP Share 🎁", color: [18, 222, 38], hoist: true, mentionable: true })).id;
+
         for (let index = 1; index <= MAX_CHARS; index++) {
             if (index <= characterCount) {
                 config[`character${index}RoleId`] = (await ROLES.create({ name: `Character ${index}` })).id;
@@ -90,6 +92,7 @@ module.exports = {
             "tier2RoleId"       :   NUMBER
             "tier1RoleId"       :   NUMBER
             "xpFreezeRoleId"    :   NUMBER
+            "xpShareRoleId"     :   NUMBER
             "character1RoleId"  :   NUMBER
             "character2RoleId"  :   NUMBER
             "character3RoleId"  :   NUMBER

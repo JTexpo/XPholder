@@ -165,9 +165,26 @@ client.on('messageCreate', async message => {
         if (!channel) { return; }
 
         if (gService.channels[channel.id] == 0){ return; }
+
+
         const xp = getXp(messageCount, roleBonus, gService.channels[channel.id], gService.config["xpPerPostDivisor"], gService.config["xpPerPostFormula"]);
 
-        gService.updateCharacterXP(character, xp);
+        if (player._roles.includes(gService.config["xpShareRoleId"])){
+            const playerCharacters = await gService.getAllCharacters(player.id);
+            for (let subCharacter of playerCharacters) {
+                await updateCharacterXpAndMessage(guild, gService, subCharacter, xp / playerCharacters.length, player)
+            }
+        }else{
+            await updateCharacterXpAndMessage(guild, gService, character, xp, player)
+        }
+        
+
+    } catch (error) { console.log(error); }
+});
+
+async function updateCharacterXpAndMessage(guild, gService, character, xp, player){
+    try{
+        await gService.updateCharacterXP(character, xp);
 
         const oldLevelInfo = getLevelInfo(gService.levels, character["xp"]);
         const newLevelInfo = getLevelInfo(gService.levels, character["xp"] + xp);
@@ -213,9 +230,8 @@ client.on('messageCreate', async message => {
 
             awardChannel.send({ content: `${player}`, embeds: [levelUpEmbed] });
         }
-
-    } catch (error) { console.log(error); }
-});
+    }catch(error){ console.log(error) }
+}
 
 /*
 ---------------------

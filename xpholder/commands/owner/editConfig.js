@@ -76,6 +76,10 @@ module.exports = {
             .setName("xp_freeze_role")
             .setDescription("The Role For XP-Freeze")
             .setRequired(false))
+        .addRoleOption(option => option
+            .setName("xp_share_role")
+            .setDescription("The Role For XP-Share")
+            .setRequired(false))
         .addIntegerOption(option => option
             .setName("xp_per_post_divisor")
             .setDescription("The Lower The More XP ( Suggested 100 )")
@@ -128,6 +132,7 @@ module.exports = {
         const tier4Role = interaction.options.getRole("tier_4_role");
         const allowPlayerManageXp = interaction.options.getString("allow_player_manage_xp");
         const xpFreezeRole = interaction.options.getRole("xp_freeze_role");
+        const xpShareRole = interaction.options.getRole("xp_share_role");
         const xpPerPostDivisor = interaction.options.getInteger("xp_per_post_divisor");
         const xpPerPostFormula = interaction.options.getString("xp_per_post_formula");
 
@@ -157,6 +162,7 @@ module.exports = {
         if (tier4Role) { config["tier4RoleId"] = tier4Role.id; }
         if (allowPlayerManageXp) { config["allowPlayerManageXp"] = allowPlayerManageXp; }
         if (xpFreezeRole) { config["xpFreezeRoleId"] = xpFreezeRole.id; }
+        if (xpShareRole) { config["xpShareRoleId"] = xpShareRole.id; }
         if (xpPerPostDivisor) { config["xpPerPostDivisor"] = xpPerPostDivisor; }
         if (xpPerPostFormula) { config["xpPerPostFormula"] = xpPerPostFormula; }
 
@@ -179,6 +185,7 @@ module.exports = {
             "tier2RoleId"           :   NUMBER
             "tier1RoleId"           :   NUMBER
             "xpFreezeRoleId"        :   NUMBER
+            "xpShareRoleId"         :   NUMBER
             "character1RoleId"      :   NUMBER
             "character2RoleId"      :   NUMBER
             "character3RoleId"      :   NUMBER

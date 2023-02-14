@@ -126,6 +126,7 @@ ${configObj.approveMessage}`)
             { inline: true, name: "Tier 4", value: `<@&${configObj.tier4RoleId}>` },
             { inline: true, name: "Allow Player Manage Xp", value: `${configObj.allowPlayerManageXp}` },
             { inline: true, name: "XP Freeze", value: `<@&${configObj.xpFreezeRoleId}>` },
+            { inline: true, name: "XP Share", value: `<@&${configObj.xpShareRoleId}>` },
             { inline: true, name: "XP Per-Post Divisor", value: `${configObj.xpPerPostDivisor}` },
             { inline: true, name: "XP Per-Post Formula", value: `${configObj.xpPerPostFormula}` },
         )

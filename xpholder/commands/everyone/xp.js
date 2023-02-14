@@ -79,10 +79,6 @@ module.exports = {
                         .setLabel('Set')
                         .setStyle("Success"),
                     new ButtonBuilder()
-                        .setCustomId("xp_freeze")
-                        .setLabel("Toggle Freeze")
-                        .setStyle("Primary"),
-                    new ButtonBuilder()
                         .setCustomId("xp_retire")
                         .setLabel("Retire")
                         .setStyle("Danger")
