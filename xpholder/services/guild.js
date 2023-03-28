@@ -65,6 +65,13 @@ class guildService {
         return response;
     }
 
+    async getAllGuildCharacters(){
+        await this.database.openDatabase();
+        const response = await this.database.getAll(`SELECT * FROM characters;`);
+        await this.database.closeDatabase();
+        return response;
+    }
+
     async getCharacter(characterId) {
         await this.database.openDatabase();
         const response = await this.database.get(`SELECT * FROM characters WHERE character_id = "${characterId}";`)
