@@ -257,7 +257,7 @@ function createButtonEvents(guildService, interaction, player, replyMessage, pla
                         await guildService.deleteCharacter(playerCharacters[pageIndex]);
 
                         copyOfEmbed = characterEmbeds[pageIndex];
-                        awardChannel;
+                        let awardChannel;
                         removeRoles = []
                         /*
                         ----------
